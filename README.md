@@ -1,4 +1,4 @@
 dbv
 ===
 
-Volume/mesh database visulisation.
+Volume/mesh database visualisation.
