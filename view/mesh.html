@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Mesh viewer</title>
+<link type='text/css' rel='stylesheet' href='../css/style.css'>
+<style>
+html, body {
+    overflow: hidden;
+}
+#display {
+    height: 100%;
+}
+#fileChoose {
+    margin-top: -150px; margin-left: -150px;
+}
+</style>
+<!-- Third parties -->
+<script type='text/javascript' src='../ext/X/xtk.js'></script>
+<script type='text/javascript' src='../ext/X/xtk_xdat.gui.js'></script>
+<!-- Local sources -->
+<script type='text/javascript' src='../src/browser.js'></script>
+<script type='text/javascript' src='../src/gui.js'></script>
+<script type='text/javascript' src='../src/math.js'></script>
+<script type='text/javascript' src='../src/mesh.js'></script>
+
+<script type='text/javascript'>
+/**
+* Window Onload: check webgl support and setup.
+*/
+window.onload = function() {
+    // check webGL
+    var message = {};
+    if ( !dbv.browser.checkWebGL(message) ) {
+        dbv.gui.displayError(message);
+        return;
+    }
+    // possible path in uri: [root]?input=a.vtk
+    var uri = window.location.href;
+    var qmarkIndex = uri.indexOf('?');
+    // expect a vtk file, minimum: 'a.vtk' (len=5)
+    var loadedLink = false;
+    if ( qmarkIndex != -1 && qmarkIndex < uri.length - 11 ) {
+        var key = uri.substr(qmarkIndex+1, 5);
+        if ( key === 'input' ) {
+            loadedLink = true;
+            renderFile(uri.substr(qmarkIndex+7));
+        }
+    }
+    if ( !loadedLink ) {
+        // file choose box
+        var div = document.getElementById("fileChoose");
+        if ( div ) {
+            // show the box
+            hideFileChoose(false);
+            // handle drag/drop
+            div.addEventListener("dragover", dbv.gui.onDragOver);
+            div.addEventListener("dragleave", dbv.gui.onDragLeave);
+            div.addEventListener("drop", onDrop);
+        }
+    }
+}
+
+/**
+* Handle file change.
+* @param source The source of the file, a HTML input.
+*/
+function onFileChange(source) {
+    // render
+    renderFile(source.files[0])
+}
+
+/**
+* Handle drop events.
+* @param event A drop event.
+*/
+function onDrop(event) {
+    // prevent default handling
+    event.stopPropagation();
+    event.preventDefault();
+    // change style to not hover
+    this.className = '';
+    // render
+    renderFile(event.dataTransfer.files[0]);
+}
+
+/**
+* Hide or show the file chooser div.
+* @param flag If true, will hide the div. Otherwise displays it.
+*/
+function hideFileChoose(flag) {
+    // hide file load
+    var div = document.getElementById('fileChoose');
+    if ( div ) {
+        div.style.display = flag ? 'none' : '';
+    }
+}
+
+/**
+* Render the input file.
+* @param file The file to render. Either a path or a File.
+*/
+function renderFile(file) {
+    // remove possible error message
+    dbv.gui.removeNode('error');
+    // callback to hide the file choose div
+    var callback = hideFileChoose;
+    // options
+    var options = {'withPanel': true};
+    // load data
+    try {
+        dbv.mesh.render(file, 'display', callback, options);
+    }
+    catch(error) {
+        dbv.gui.displayMessage({'type': 'error', 'text': error.message});
+    }
+}
+</script>
+</head>
+
+<body>
+
+<!-- file choose -->
+<div id='fileChoose' style="display: none;">
+<h1>Mesh web viewer</h1>
+<p>Drag and drop<p>
+<p>OR</p>
+<input type='file' id='meshFile' multiple='false' onchange='onFileChange(this)'/>
+<p>Test:
+    <a href='#' onclick="renderFile('../data/test/cube.vtk')">cube</a>,
+    <a href='#' onclick="renderFile('../data/test/cube-wn.vtk')">cube-wn</a>,
+    <a href='#' onclick="renderFile('../data/test/cube-bad_binary.vtk')">cube-bad_binary</a>
+</p>
+</div>
+
+<!-- main display window -->
+<div id='display'></div>
+
+</body>
+</html>

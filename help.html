@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>DBV Help</title>
+<link type="text/css" rel="stylesheet" href="css/style.css">
+<link type="text/css" rel="stylesheet" href="ext/jquery-mobile/jquery.mobile-1.4.4.min.css" />
+<!-- Third party -->
+<script type="text/javascript" src="ext/jquery/jquery-2.1.1.min.js"></script>
+<script type="text/javascript" src="ext/jquery-mobile/jquery.mobile-1.4.4.min.js"></script>
+</head>
+
+<body>
+
+<h1>%DBNAME%: help</h1>
+
+<div>
+<p>Back to the data <a href="index.html">page</a>.</p>
+</div>
+
+<div id="help">
+<h2>Browser settings</h2>
+<p>For debugging puposes, here are the settings to allow local file access in main browsers:</p>
+<ul>
+<li><b>Mozilla Firefox</b>: in the about:config page, set <code>security.fileuri.strict_origin_policy</code> to false.</li>
+<li><b>Google Chrome</b>: launch it from the command line with '<code>--disable-web-security</code>'.</li>
+<li><b>Apple Safari</b>: in Safari preferences, Advanced, tick '<code>Show Develop menu in menu bar</code>'
+Then in the develop menu, tick: '<code>Enable webGL</code>' and '<code>Disable Local File Restrictions</code>'..</li>
+</ul>
+
+
+<h2>Mesh import</h2>
+<p>The mesh files need to contain normals to be loaded with <a href="http://www.goXTK.com">XTK</a>.
+Normals can be generated with <a href="http://www.paraview.org/">Paraview</a>:</p>
+<ol>
+<li>Load the shape,</li>
+<li>Paraview > Filters > 'Generate Surface Normals' (with or without 'Flip Normals')</li>
+<li>Set the 'Feature Angle' to 0,</li>
+<li>Apply,</li>
+<li>Save using vtk ASCII format</li>
+</ol>
+
+</div>
+
+
+</body>
+</html>

@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>DBV</title>
+<link type="text/css" rel="stylesheet" href="css/style.css">
+<link type="text/css" rel="stylesheet" href="view/style.css">
+<style>
+#dataList table {
+    width: 80%; border-collapse: collapse;
+}
+#dataList td, th {
+    border: 1px solid grey; padding: 2px;
+}
+#display {
+    height: 410px; width: 400px; float: right;
+}
+#volumeDisplay {
+    float: left; background-color: #000;
+}
+.ui-btn { font-size: 80% !important; }
+</style>
+
+<!-- VTK mesh -->
+
+<!-- Third parties -->
+<script type="text/javascript" src="ext/X/xtk.js"></script>
+<script type="text/javascript" src="ext/X/xtk_xdat.gui.js"></script>
+<!-- Local sources -->
+<script type="text/javascript" src="src/browser.js"></script>
+<script type="text/javascript" src="src/gui.js"></script>
+<script type="text/javascript" src="src/math.js"></script>
+<script type="text/javascript" src="src/mesh.js"></script>
+
+<!-- DICOM volume -->
+
+<link type="text/css" rel="stylesheet" href="ext/jquery-mobile/jquery.mobile-1.4.4.min.css" />
+<!-- Third party -->
+<script type="text/javascript" src="ext/jquery/jquery-2.1.1.min.js"></script>
+<script type="text/javascript" src="ext/jquery-mobile/jquery.mobile-1.4.4.min.js"></script>
+<!-- The folowing include triggers an error in mesh.js when "var mesh = new X.mesh();' ??? -->
+<!--<script type="text/javascript" src="ext/openjpeg/openjpeg.js"></script>-->
+<!-- Local -->
+<script type="text/javascript" src="ext/dwv/dwv-0.8.0beta.min.js"></script>
+<!-- Launch the app -->
+<script type="text/javascript" src="view/simple/appgui.js"></script>
+<script type="text/javascript">
+// Window
+dwv.gui.getWindowSize = function(){
+    return {'width': 400, 'height': 400 };
+};
+</script>
+<script type="text/javascript" src="view/simple/applauncher.js"></script>
+
+<script type="text/javascript">
+
+// the data list: global object
+var data;
+
+/**
+* Get the mesh info HTML element. A mesh info is made of:
+* { 'fileId0' : 'file0', 'fileId1' : 'file1', (...) }
+*/
+function getMeshInfoElement(data) {
+    var element = document.createElement('p');
+    var keys = Object.keys(data);
+    for ( var i = 0; i < keys.length; ++i ) {
+        var link = document.createElement('a');
+        link.href = 'view/mesh.html?input=../' + data[keys[i]];
+        link.appendChild( document.createTextNode( keys[i] ) );
+        link.target = '_parent';
+        if ( i !== 0 ) element.appendChild( document.createTextNode(', '));
+        element.appendChild(link);
+    }
+    return element;
+}
+
+/**
+* Get the volume info HTML element. A volume info is made of:
+* { 'seriesId0' : { 'root': 'root0', 'files' : { '0': 'file00', '1': 'file01', (...) },
+*   'seriesId1' : { 'root': 'root1', 'files' : { '0': 'file10', '1': 'file11', (...) },
+*   (...) }
+*/
+function getVolumeInfoElement(data, viewType) {
+    var element = document.createElement('p');
+    // two types: volume|slice
+    var linkRoot;
+    if ( viewType === 'volume' ) {
+        linkRoot = 'view/volume.html';
+    }
+    else {
+        linkRoot = 'view/mobile/index.html';
+    }
+    // loop through data
+    var keys = Object.keys(data);
+    for ( var i = 0; i < keys.length; ++i ) {
+        var volumeInfo = data[keys[i]];
+        var dataLink = getVolumeLinkStr(volumeInfo.root, volumeInfo.files, viewType);
+        var link = document.createElement('a');
+        link.href = linkRoot + '?input=' + dataLink + '&dwvReplaceMode=void';
+        link.appendChild( document.createTextNode( keys[i]) );
+        link.target = '_parent';
+        if ( i !== 0 ) element.appendChild( document.createTextNode(', '));
+        element.appendChild(link);
+    }
+    return element;
+}
+
+/**
+* Get a list of volume file paths as an encoded URI string.
+* @param root The root path,
+* @param files The list of file names.
+*/
+function getVolumeLinkStr(root, files, viewType) {
+    var redir;
+    if ( viewType === 'volume' ) {
+        redir = '../';
+    }
+    else {
+        redir = '../../';
+    }
+    var str = redir + root + '/?';
+    var keys = Object.keys(files);
+    for ( var i = 0; i < keys.length; ++i ) {
+        if ( i !== 0 ) str += '&';
+        str += 'file=' + files[keys[i]];
+    }
+    return encodeURIComponent(str);
+}
+
+/**
+* Get a list of volume file paths as an array.
+* @param root The root path,
+* @param files The list of file names.
+*/
+function getVolumesFileArray(root, files) {
+    var fileArray = [];
+    var keys = Object.keys(files);
+    for ( var i = 0; i < keys.length; ++i ) {
+        fileArray.push( root + '/' + files[keys[i]] );
+    }
+    return fileArray;
+}
+
+/**
+* Append a row extracted from an input data to a table.
+* @param {Object} table The HTML table to append a row to.
+* @param {Object} input The input data.
+* @param {String} name The name of the input data.
+*/
+function appendRow(table, input, name)
+{
+    var row = table.insertRow(-1);
+    // name
+    dbv.gui.appendCell(row, document.createTextNode(name));
+    // mesh
+    dbv.gui.appendCell(row, getMeshInfoElement(input.mesh));
+    // volume
+    var viewType = 'slice';
+    var radioViewVol = document.getElementById('radio-view-volume');
+    if ( radioViewVol && radioViewVol.checked ) {
+            viewType = 'volume';
+    }
+    dbv.gui.appendCell(row, getVolumeInfoElement(input.volume, viewType));
+    // comments
+    var pComments = document.createElement('p');
+    pComments.appendChild( document.createTextNode(input.comments.text));
+    if ( input.comments.previewLink ) {
+        pComments.appendChild( document.createTextNode(' See '));
+        var link = document.createElement('a');
+        link.href = '#';
+        link.appendChild( document.createTextNode( 'preview' ) );
+        link.onclick = function () {
+            renderData(name);
+        };
+        pComments.appendChild(link);
+        pComments.appendChild( document.createTextNode('.'));
+    }
+    dbv.gui.appendCell(row, pComments);
+};
+
+/**
+* Render the input mesh file.
+* @param file The file to render. Either a path or a File.
+*/
+function renderMeshFile(file) {
+    // callback
+    var callback = function () {};
+    // options
+    var options = {'withPanel': false};
+    // load data
+    try {
+        dbv.mesh.render(file, 'display', callback, options);
+    }
+    catch(error) {
+        dbv.gui.displayMessage({'type': 'error', 'text': error.message});
+    }
+}
+
+/**
+* Render the input volume file.
+* @param file The file to render. Either a path or a File.
+*/
+function renderVolumeFile(data) {
+    // load data
+    var links = getVolumesFileArray( data.root, data.files );
+    app.loadURL(links);
+}
+
+/**
+* Render the input files.
+* @param meshFile The mesh file to render. Either a path or a File.
+* @param volumeFile The volume file to render.
+*/
+function renderData(id) {
+    // show the div
+    var preview = document.getElementById('preview');
+    preview.style.display = '';
+
+    var div = document.getElementById('dataText');
+    if ( div ) {
+        dbv.gui.cleanNode(div);
+        var para = document.createElement('p');
+        para.appendChild( document.createTextNode( 'Data: ' + id + ' (first mesh and volume)' ) );
+        div.appendChild( para );
+    }
+    // mesh
+    var meshKeys = Object.keys(data[id].mesh);
+    renderMeshFile( data[id].mesh[meshKeys[0]] );
+    // volume
+    var volKeys = Object.keys(data[id].volume);
+    renderVolumeFile( data[id].volume[volKeys[0]] );
+}
+
+/**
+* Append the Data HTML table.
+*/
+function appendDataHTMLTable() {
+    // clear previous possible table
+    dbv.gui.removeNode('dataTable');
+    // show the data in a table
+    var header = ['Data name', 'Mesh', 'Volume', 'Comments'];
+    var table = dbv.gui.toTable(data, header, appendRow);
+    table.id = 'dataTable';
+    var div = document.getElementById('dataList');
+    div.appendChild(table);
+}
+
+/**
+* Window Onload: check webgl support and setup.
+*/
+window.onload = function() {
+    // check webGL
+    var message = {};
+    if ( !dbv.browser.checkWebGL(message) ) {
+        dbv.gui.displayError(message);
+        return;
+    }
+    // load data file
+    $.getJSON('data.json', function (json) {
+        data = json;
+        appendDataHTMLTable();
+        // listen to change
+        var nodeV = document.getElementById('radio-view-volume');
+        nodeV.onchange = appendDataHTMLTable;
+        var nodeS = document.getElementById('radio-view-slice');
+        nodeS.onchange = appendDataHTMLTable;
+    });
+}
+</script>
+</head>
+
+<body>
+
+<h1>%DBNAME%: data</h1>
+
+<div>
+<p>See the <a href="help.html">help</a> page for browser settings.</p>
+</div>
+
+<div id="dataList">
+<h2>Data list</h2>
+
+<div data-role="fieldcontain">
+<fieldset id="view-choice" data-role="controlgroup" data-type="horizontal">
+<legend>Volume viewer: </legend>
+<input type="radio" name="radio-view" id="radio-view-volume" value="volume" checked="checked">
+<label for="radio-view-volume">Volume</label>
+<input type="radio" name="radio-view" id="radio-view-slice" value="slice">
+<label for="radio-view-slice">Slice</label>
+</fieldset>
+</div>
+
+</div>
+
+<div id="preview" style="display: none;">
+
+<h2>Preview</h2>
+<div id="dataText"></div>
+
+<!-- mesh display -->
+<div id="display" ></div>
+
+<!-- volume display -->
+<div id="volumeDisplay">
+<!-- Toolbar -->
+<div id="toolbar"></div>
+<!-- Layer Container -->
+<div id="layerContainer">
+<canvas id="imageLayer">Only for HTML5 compatible browsers...</canvas>
+</div><!-- /layerContainer -->
+</div><!-- /volumeDisplay -->
+
+</div><!-- /preview -->
+
+</body>
+</html>

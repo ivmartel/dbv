@@ -1,0 +1,26 @@
+{
+    "Test" : {
+        "mesh" : {
+            "Cube": "data/test/cube.vtk",
+            "Cube (with normals)": "data/test/cube-wn.vtk",
+            "Cube (error: binary)": "data/test/cube-bad_binary.vtk",
+            "Cube (error: points)": "data/test/cube-bad_npoints.vtk",
+            "Cube (error: size)": "data/test/cube-bad_size.vtk",
+            "Carto": "data/test/testcarto00.vtk"
+        },
+        "volume" : {
+            "series1" : {
+                "root": "data/test/cube",
+                "files" : {
+                    "0": "test000.dcm", "1": "test001.dcm", "2": "test002.dcm", "3": "test003.dcm",
+                    "4": "test004.dcm", "5": "test005.dcm", "6": "test006.dcm", "7": "test007.dcm",
+                    "8": "test008.dcm", "9": "test009.dcm", "10": "test010.dcm", "11": "test011.dcm"
+                }
+            }
+        },
+        "comments" : {
+            "text": "Pretty cool test data.",
+            "previewLink": true
+        }
+    }
+}

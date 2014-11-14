@@ -1,0 +1,48 @@
+!_TAG_FILE_FORMAT	2	/extended format; --format=1 will not append ;" to lines/
+!_TAG_FILE_SORTED	1	/0=unsorted, 1=sorted, 2=foldcase/
+!_TAG_PROGRAM_AUTHOR	Darren Hiebert	/dhiebert@users.sourceforge.net/
+!_TAG_PROGRAM_NAME	Exuberant Ctags	//
+!_TAG_PROGRAM_URL	http://ctags.sourceforge.net	/official site/
+!_TAG_PROGRAM_VERSION	5.8	//
+dbv.browser.checkWebGL	src\browser.js	/^dbv.browser.checkWebGL = function (message) {$/;"	f
+dbv.gui.appendCell	src\gui.js	/^dbv.gui.appendCell = function(row, object)$/;"	f
+dbv.gui.appendHCell	src\gui.js	/^dbv.gui.appendHCell = function(row, text)$/;"	f
+dbv.gui.callWhenDone	src\gui.js	/^dbv.gui.callWhenDone = function (callback) {$/;"	f
+dbv.gui.cleanNode	src\gui.js	/^dbv.gui.cleanNode = function (node) {$/;"	f
+dbv.gui.displayArray	src\gui.js	/^dbv.gui.displayArray = function (array, divName) {$/;"	f
+dbv.gui.displayMessage	src\gui.js	/^dbv.gui.displayMessage = function (message) {$/;"	f
+dbv.gui.meshPanel	src\gui.js	/^dbv.gui.meshPanel = function (mesh, points, scalarList, renderer) {$/;"	f
+dbv.gui.meshZRotator	src\gui.js	/^dbv.gui.meshZRotator = function (renderer, mesh) {$/;"	c
+dbv.gui.meshZRotator.rotate	src\gui.js	/^    this.rotate = function () {$/;"	m
+dbv.gui.onDragLeave	src\gui.js	/^dbv.gui.onDragLeave = function (event) {$/;"	c
+dbv.gui.onDragOver	src\gui.js	/^dbv.gui.onDragOver = function (event) {$/;"	c
+dbv.gui.onError	src\gui.js	/^dbv.gui.onError = function (message) {$/;"	f
+dbv.gui.removeNode	src\gui.js	/^dbv.gui.removeNode = function (id) {$/;"	f
+dbv.gui.toTable	src\gui.js	/^dbv.gui.toTable = function(input, header, rowCallback)$/;"	f
+dbv.gui.volumePanel	src\gui.js	/^dbv.gui.volumePanel = function (volume) {$/;"	f
+dbv.math.getArrayMinMax	src\math.js	/^dbv.math.getArrayMinMax = function ( array ) {$/;"	f
+dbv.mesh.appendScalars	src\mesh.js	/^dbv.mesh.appendScalars = function (mesh, scalars) {$/;"	f
+dbv.mesh.countUniquePoints	src\mesh.js	/^dbv.mesh.countUniquePoints = function ( triplets ) {$/;"	f
+dbv.mesh.filterScalars	src\mesh.js	/^dbv.mesh.filterScalars = function ( pointsA, pointsB, scalarsB ) {$/;"	f
+dbv.mesh.getRenderer	src\mesh.js	/^dbv.mesh.getRenderer = function (displayDivName) {$/;"	f
+dbv.mesh.getVertexShader	src\mesh.js	/^dbv.mesh.getVertexShader = function (type) {$/;"	f
+dbv.mesh.isASCII	src\mesh.js	/^dbv.mesh.isASCII = function ( text ) {$/;"	f
+dbv.mesh.isPOLYDATA	src\mesh.js	/^dbv.mesh.isPOLYDATA = function ( text ) {$/;"	f
+dbv.mesh.parseScalars	src\mesh.js	/^dbv.mesh.parseScalars = function ( text ) {$/;"	f
+dbv.mesh.parseVtk	src\mesh.js	/^dbv.mesh.parseVtk = function ( buffer ) {$/;"	f
+dbv.mesh.render	src\mesh.js	/^dbv.mesh.render = function (meshFile, displayDivName, callback, options) {$/;"	f
+dbv.mesh.switchScalars	src\mesh.js	/^dbv.mesh.switchScalars = function (scalars, mesh, points) {$/;"	f
+dbv.volume.getRenderer	src\volume.js	/^dbv.volume.getRenderer = function (displayDivName) {$/;"	f
+dbv.volume.render	src\volume.js	/^dbv.volume.render = function (files, displayDivName, callback, options) {$/;"	f
+reader.onerror	src\mesh.js	/^        reader.onerror = function (event) {$/;"	f
+reader.onerror	src\volume.js	/^            reader.onerror = function (event) {$/;"	f
+reader.onload	src\mesh.js	/^        reader.onload = function (event) {$/;"	f
+renderer.onRender	src\gui.js	/^            renderer.onRender = function () {};$/;"	f
+renderer.onShowtime	src\mesh.js	/^            renderer.onShowtime = function () {$/;"	f
+renderer.onShowtime	src\volume.js	/^    renderer.onShowtime = function () {$/;"	f
+request.onerror	src\mesh.js	/^        request.onerror = function (event) {$/;"	f
+request.onerror	src\volume.js	/^            request.onerror = function (event) {$/;"	f
+request.onload	src\mesh.js	/^        request.onload = function (event) {$/;"	f
+var.getFileLoadHandler	src\volume.js	/^        var getFileLoadHandler = function (id) {$/;"	f
+var.getUrlLoadHandler	src\volume.js	/^        var getUrlLoadHandler = function (id) {$/;"	f
+var.scalars.array	src\gui.js	/^        var scalars = { 'array': scalarList[0].name };$/;"	p

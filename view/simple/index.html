@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+<title>DICOM Volume</title>
+<meta charset="UTF-8">
+<link type="text/css" rel="stylesheet" href="../style.css" />
+<link type="text/css" rel="stylesheet" href="../../ext/jquery-mobile/jquery.mobile-1.4.4.min.css" />
+<!-- Third party -->
+<script type="text/javascript" src="../../ext/jquery/jquery-2.1.1.min.js"></script>
+<script type="text/javascript" src="../../ext/jquery-mobile/jquery.mobile-1.4.4.min.js"></script>
+<script type="text/javascript" src="../../ext/openjpeg/openjpeg.js"></script>
+<!-- Local -->
+<script type="text/javascript" src="../../ext/dwv/dwv-0.8.0beta.min.js"></script>
+<!-- Launch the app -->
+<script type="text/javascript" src="appgui.js"></script>
+<script type="text/javascript">
+// Window
+dwv.gui.getWindowSize = function () {
+    return dwv.gui.base.getWindowSize();
+};
+</script>
+<script type="text/javascript" src="applauncher.js"></script>
+
+</head>
+
+<body>
+
+<!-- Main page -->
+<div data-role="page" data-theme="b">
+
+<!-- Main content -->
+<div data-role="content">
+
+<!-- Toolbar -->
+<div id="toolbar"></div>
+
+<!-- Layer Container -->
+<div id="layerContainer">
+<canvas id="imageLayer">Only for HTML5 compatible browsers...</canvas>
+</div><!-- /layerContainer -->
+
+</div><!-- /content -->
+
+</div><!-- /page -->
+
+</body>
+</html>
