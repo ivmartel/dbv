@@ -280,3 +280,23 @@ dbv.gui.toTable = function(input, header, rowCallback)
     // return
     return table;
 };
+
+/**
+* Converts the input to an HTML list.
+* @method toList
+* @static
+* @param {Object} input The Object to display in the list.
+* @param {Object} callback The callback to run with element information.
+* @return {Object} The created HTML list.
+*/
+dbv.gui.toList = function(input, callback)
+{
+    var list = document.createElement('ul');
+    // body
+    var keys = Object.keys(input);
+    for ( var j = 0; j < keys.length; ++j ) {
+        callback(list, input[keys[j]], keys[j]);
+    }
+    // return
+    return list;
+};

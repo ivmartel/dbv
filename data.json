@@ -2,7 +2,10 @@
     "Test" : {
         "mesh" : {
             "Cube": "data/test/cube.vtk",
-            "Cube (with normals)": "data/test/cube-wn.vtk",
+            "Cube (150 points)": "data/test/cube-150.vtk",
+            "Cube (1734 points)": "data/test/cube-1734.vtk",
+            "Cube (6534 points)": "data/test/cube-6534.vtk",
+            "Cube (no normals)": "data/test/cube-no_normals.vtk",
             "Cube (error: binary)": "data/test/cube-bad_binary.vtk",
             "Cube (error: points)": "data/test/cube-bad_npoints.vtk",
             "Cube (error: size)": "data/test/cube-bad_size.vtk",

@@ -3,6 +3,31 @@ var dbv = dbv || {};
 dbv.mesh = dbv.mesh || {};
 
 /**
+* toPrecision method for a 3D array.
+* @param vector The input 3D array.
+* @param digits The number of digits.
+* @return The truncated/rounded (if neede) 3D array.
+*/
+dbv.mesh.toPrecision = function ( vector, digits ) {
+    return [ vector[ 0 ].toPrecision(digits),
+        vector[ 1 ].toPrecision(digits),
+        vector[ 2 ].toPrecision(digits) ]
+}
+
+/**
+* toPrecision method for a 3D string array.
+* @param vector The input 3D string array.
+* @param digits The number of digits.
+* @return The truncated/rounded (if neede) 3D array.
+*/
+dbv.mesh.strToPrecision = function ( vector, digits ) {
+    return dbv.mesh.toPrecision( [
+        parseFloat(vector[ 0 ]),
+        parseFloat(vector[ 1 ]),
+        parseFloat(vector[ 2 ]) ], digits );
+}
+
+/**
 * Filter a scalar array to remove all un-matched points.
 * @param pointsA Point list to parse, type: X.triplets.
 * @param pointsB Reference points, type: array, storage: [x0, y0, z0, x1, y1, z1, ...].
@@ -10,38 +35,40 @@ dbv.mesh = dbv.mesh || {};
 * @return The result array (or scalarsA), type: array, storage: [s0, s0, s0, s1, s1, s1, ...].
 */
 dbv.mesh.filterScalars = function ( pointsA, pointsB, scalarsB ) {
+    // associate pointsB and scalarsB to easily find them
+    var precision = 6;
+    var dataB = {};
+    for ( var j = 0; j < pointsB.length / 3; ++j ) {
+        var jindex = j * 3;
+        var pointB = dbv.mesh.strToPrecision( [
+            pointsB[ jindex ],
+            pointsB[ jindex + 1 ],
+            pointsB[ jindex + 2 ] ], precision );
+        dataB[ pointB ] = scalarsB[j];
+    }
     var size = pointsA.length / 3;
     var scalarsA = new Float32Array(size * 3);
     var nUnmatch = 0;
-    var tolerance = 1e-2;
     for ( var i = 0; i < size; ++i ) {
-        var point = pointsA.get(i);
-        // find point index
-        var pointIndex = -1;
-        for ( var j = 0; j < pointsB.length / 3; ++j ) {
-            var jindex = j * 3;
-            if ( Math.abs( pointsB[ jindex ] - point[0] ) < tolerance &&
-                 Math.abs( pointsB[ jindex + 1 ] - point[1] ) < tolerance &&
-                 Math.abs( pointsB[ jindex + 2 ] - point[2] ) < tolerance ) {
-                 pointIndex = j;
-                 break;
-            }
+        // get scalar value
+        scalarA = 0;
+        var pointA = dbv.mesh.toPrecision(pointsA.get(i), precision);
+        if ( dataB.hasOwnProperty(pointA) ) {
+            scalarA = dataB[pointA];
         }
-        if ( pointIndex == -1 ) {
+        else {
             nUnmatch++;
-            console.log("Unmatched point: "+point[0]+", "+point[1]+", "+point[2]);
+            console.log("Unmatched point: "+pointA[0]+", "+pointA[1]+", "+pointA[2]);
         }
         if ( nUnmatch > 200 ) {
-            console.log("Too many unmatched...");
+            console.log("More than 200 unmatched...");
             return;
         }
-        // get scalar value
-        var value = scalarsB[ pointIndex ];
         // store it
         var index = i * 3;
-        scalarsA[ index ] = value;
-        scalarsA[ index + 1 ] = value;
-        scalarsA[ index + 2 ] = value;
+        scalarsA[ index ] = scalarA;
+        scalarsA[ index + 1 ] = scalarA;
+        scalarsA[ index + 2 ] = scalarA;
     }
     return scalarsA;
 };
