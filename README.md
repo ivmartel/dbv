@@ -1,7 +1,12 @@
 dbv
 ===
 
-Volume/mesh database visualisation. Using a locally modified version of XTK, see https://github.com/ivmartel/X.
+Volume/mesh database visualisation. Using a locally modified version of XTK, see https://github.com/ivmartel/X. Modify the 'data.json' file to link to your data. 
+
+For development purposes, browsers do have a switch to allow accessing local file(s):
+ * Google Chrome: launch with the `--disable-web-security` argument (see the [list](http://peter.sh/experiments/chromium-command-line-switches/#disable-web-security)),
+ * Apple Safari: in Safari preferences, Advanced, tick 'Show Develop menu in menu bar'. Then in the develop menu, tick: 'Disable Local File Restrictions'.
+ * Mozilla Firefox: in `about:config` set `security.fileuri.strict_origin_policy` to false (see [fileuri.strict_origin_policy](http://kb.mozillazine.org/Security.fileuri.strict_origin_policy)).
 
 XTK notes
 ---------
