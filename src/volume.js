@@ -3,67 +3,53 @@ var dbv = dbv || {};
 dbv.volume = dbv.volume || {};
 
 /**
-* Get a X.renderer3D for the input data.
-* @param displayDivName The name of the HTML div in which to put the rendered mesh.
-* @param sync
-*/
-dbv.volume.getRenderer = function (displayDivName) {
-    // display div
-    var displayDiv = document.getElementById(displayDivName);
-    // clean div
-    dbv.gui.cleanNode(displayDiv);
-    // create a new 3d renderer
-    var renderer = new X.renderer3D();
-    renderer.container = displayDiv;
-    renderer.init();
-    // re-position the camera to face the volmue
-    //renderer.camera.position = [0.0, 300.0, -300.0];
-    renderer.camera.position = [0.0, 0.0, -400.0];
-    // return
-    return renderer;
-}
-
-/**
-* Render the selected files.
+* Add volume files to a renderer.
+* @param renderer The renderer to add to.
 * @param volumeFile Either a instance of a File or path to the volume file.
-* @param displayDivName The name of the HTML div in which to put the rendered veolume.
 * @param callback A callback function that will be run at the end of the 'onload' function.
-* @param options Extra options.
+* @param gui Optional gui to add panels to.
+* @param showtimeListeners Listereners to be run at showtime.
+* @param
 */
-dbv.volume.render = function (files, displayDivName, callback, options) {
-
+dbv.volume.render = function (renderer, files, callback, gui, showtimeListeners, otherRenderers) {
     // check volume file
     var isFile = false;
+    var testFileName;
     var testFile = files[0];
     if ( typeof(testFile) === 'undefined' ) {
         var message = 'Please provide a valid file.';
         throw new Error(message);
     }
     else if ( testFile instanceof File ) {
+        testFileName = testFile.name;
         isFile = true;
     }
+    else {
+        testFileName = testFile;
+    }
 
-    // optionss
-    var withPanel = false;
-    if ( typeof(options.withPanel) != 'undefined' ) {
-        withPanel = options.withPanel;
+    // check extension
+    var extension = testFileName.split('.').pop();
+    if ( extension !== 'dcm' && extension !== 'nii') {
+        var message = 'Unsupported file format: ' + extension;
+        throw new Error(message);
     }
 
     // create a volume from the input file
     var volume = new X.volume();
 
     // add the object to the renderer
-    var renderer = dbv.volume.getRenderer(displayDivName);
+
     // the onShowtime method gets executed after all files were fully loaded and
     // just before the first rendering attempt.
-    renderer.onShowtime = function () {
+    showtimeListeners.add( function () {
         // create panel
-        if ( withPanel ) {
-            dbv.gui.volumePanel(volume);
+        if ( gui ) {
+            dbv.gui.addVolumePanel(gui, volume);
         }
         // call input callback
         callback(true);
-    }
+    });
 
     var vols = [];
     var fileNames = [];
@@ -84,6 +70,14 @@ dbv.volume.render = function (files, displayDivName, callback, options) {
                     volume.filedata = vols;
                     renderer.add(volume);
                     renderer.render();
+                    if ( otherRenderers ) {
+                        showtimeListeners.add( function () {
+                            for( var i = 0; i < otherRenderers.length; ++i ) {
+                                otherRenderers[i].add(volume);
+                                otherRenderers[i].render();
+                            }
+                        });
+                    }
                 }
             };
         };
@@ -103,7 +97,7 @@ dbv.volume.render = function (files, displayDivName, callback, options) {
         var nread = 0;
         // id specific load handler
         var getUrlLoadHandler = function (id) {
-            return function (event) {
+            return function (/*event*/) {
                 // store data and name
                 vols[id] = this.response;
                 fileNames[id] = files[id];
@@ -114,6 +108,14 @@ dbv.volume.render = function (files, displayDivName, callback, options) {
                     volume.filedata = vols;
                     renderer.add(volume);
                     renderer.render();
+                    if ( otherRenderers ) {
+                        showtimeListeners.add( function () {
+                            for( var i = 0; i < otherRenderers.length; ++i ) {
+                                otherRenderers[i].add(volume);
+                                otherRenderers[i].render();
+                            }
+                        });
+                    }
                 }
             };
         };
@@ -123,7 +125,7 @@ dbv.volume.render = function (files, displayDivName, callback, options) {
             request.open('GET', files[i], true);
             request.responseType = 'arraybuffer';
             request.onload = getUrlLoadHandler(i);
-            request.onerror = function (event) {
+            request.onerror = function (/*event*/) {
                 dbv.gui.onError('Error in XMLHttpRequest, status: '+this.status);
                 callback(false);
             }

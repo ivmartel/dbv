@@ -24,17 +24,15 @@ POLYGONS 12 48
 3 0 7 3
 3 4 5 6
 3 4 6 7
-
 POINT_DATA 8
-SCALARS ID float 1
+SCALARS ID float
 LOOKUP_TABLE default
 0.0 1.0 2.0 3.0 
 4.0 5.0 6.0 7.0 
-
-FIELD FieldData 4
-FaceA 1 8 int
-0 0 0 0 
-1 1 1 1
+SCALARS FaceA float
+0.0 0.0 0.0 0.0 
+1.0 1.0 1.0 1.0 
+FIELD FieldData 3
 FaceB 1 8 int
 1 1 1 1 
 0 0 0 0 

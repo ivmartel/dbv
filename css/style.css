@@ -1,21 +1,13 @@
-@font-face {
-    font-family: "Open Sans Regular";
-    src: url('OpenSans-Regular.ttf') format("truetype");
-}
 html, body {
     background-color: #fff;
     color: #000;
     margin: 0; padding: 0;
     height: 100%;
-    font-family: 'Open Sans Regular', sans-serif;
+    font-family: 'Verdana', sans-serif;
 }
 a {
     color: #09f;
 }
-
-/**********************************
-* VTK mesh
-**********************************/
 
 /* data display */
 #display {

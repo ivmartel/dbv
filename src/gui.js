@@ -6,8 +6,10 @@ dbv.gui = dbv.gui || {};
 * Remove all childs from a node.
 */
 dbv.gui.cleanNode = function (node) {
-    while (node.hasChildNodes()) {
-        node.removeChild(node.firstChild);
+    if ( node ) {
+        while (node.hasChildNodes()) {
+            node.removeChild(node.firstChild);
+        }
     }
 }
 
@@ -72,10 +74,10 @@ dbv.gui.displayMessage = function (message) {
     else {
         div = document.createElement('div');
         div.id = message.type;
+        var body = document.body;
+        body.insertBefore(div, body.firstChild);
     }
     div.appendChild(par);
-    var body = document.body;
-    body.insertBefore(div, body.firstChild);
 }
 
 /**
@@ -103,6 +105,25 @@ dbv.gui.callWhenDone = function (callback) {
 };
 
 /**
+* Get a X.renderer3D.
+* @param displayDivName The name of the HTML div in which to put the rendered mesh.
+*/
+dbv.gui.getRenderer3D = function (displayDivName, position) {
+    // display div
+    var displayDiv = document.getElementById(displayDivName);
+    // clean div
+    dbv.gui.cleanNode(displayDiv);
+    // create a new 3d renderer
+    var renderer = new X.renderer3D();
+    renderer.container = displayDiv;
+    renderer.init();
+    // re-position the camera to face the volmue
+    renderer.camera.position = position;
+    // return
+    return renderer;
+}
+
+/**
 * Animator for dat.GUI that rotates the mesh around Z.
 * @param renderer The XTK renderer.
 * @param mesh The XTK mesh to rotate.
@@ -118,7 +139,7 @@ dbv.gui.meshZRotator = function (renderer, mesh) {
             running = true;
             renderer.onRender = function () {
                 // rotation by 1 degree in Z direction
-                mesh.transform.rotateY(1);
+                mesh.transform.rotateZ(1);
             };
         }
     };
@@ -149,40 +170,63 @@ dbv.gui.onDragLeave = function (event) {
 }
 
 /**
-* Mesh panel.
+* Handle drop events.
+* @param event A drop event.
+* Calls a locally defined 'renderFiles' method with the new files.
+*/
+dbv.gui.onDrop = function (event) {
+    // prevent default handling
+    event.stopPropagation();
+    event.preventDefault();
+    // change style to not hover
+    this.className = '';
+    // callback
+    renderFiles(event.dataTransfer.files);
+}
+
+/**
+* Handle file change.
+* @param source The source of the file, a HTML input.
+* Calls a locally defined 'renderFiles' method with the new files.
+*/
+dbv.gui.onFileChange = function (source) {
+    // render
+    renderFiles(source.files)
+}
+
+/**
+* Add a mesh panel to a root GUI.
 * Needs to be created during onShowtime(..) since we do not know the
 * mesh dimensions before the loading was completed.
+* @param root The root GUI.
 * @param mesh The associated X.mesh.
 * @param points The points associated to the scalars.
 * @param scalarList The list of scalars arrays.
-* @param renderer The X.renderer3D.
 */
-dbv.gui.meshPanel = function (mesh, points, scalarList, renderer) {
-    var gui = new dat.GUI();
-
+dbv.gui.addMeshPanel = function (root, mesh, points, scalarList) {
     // mesh gui
-    var meshgui = gui.addFolder('Mesh');
-    // configure the mesh opacity
-    //var opacityController = meshgui.add(mesh, 'opacity', 0, 1);
+    var meshgui = root.addFolder('Mesh');
     // mesh rotator
-    var animator = new dbv.gui.meshZRotator(renderer, mesh);
+    //var animator = new dbv.gui.meshZRotator(renderer, mesh);
     // animate
-    var animController = meshgui.add(animator, 'rotate');
+    //var animController = meshgui.add(animator, 'rotate');
+    // configure the mesh opacity
+    meshgui.add(mesh, 'opacity', 0, 1);
     // open the folder
     meshgui.open();
 
-    // scalars gui
-    var scalarsgui = gui.addFolder('Scalars');
-    // the min and max color which define the linear gradient mapping
-    //var minColorController = scalarsgui.addColor(mesh.scalars, 'minColor');
-    //var maxColorController = scalarsgui.addColor(mesh.scalars, 'maxColor');
-    // controllers to threshold the scalars
-    var minThresholdController = scalarsgui.add(mesh.scalars, 'lowerThreshold',
-        mesh.scalars.min, mesh.scalars.max);
-    var maxThresholdController = scalarsgui.add(mesh.scalars, 'upperThreshold',
-        mesh.scalars.min, mesh.scalars.max);
-    // switch scalars
     if ( scalarList.length != 0 ) {
+        // scalars gui
+        var scalarsgui = root.addFolder('Scalars');
+        // the min and max color which define the linear gradient mapping
+        //var minColorController = scalarsgui.addColor(mesh.scalars, 'minColor');
+        //var maxColorController = scalarsgui.addColor(mesh.scalars, 'maxColor');
+        // switch scalars
+        // controllers to threshold the scalars
+        scalarsgui.add(mesh.scalars, 'lowerThreshold',
+            mesh.scalars.min, mesh.scalars.max);
+        scalarsgui.add(mesh.scalars, 'upperThreshold',
+            mesh.scalars.min, mesh.scalars.max);
         var scalars = { 'array': scalarList[0].name };
         scalarNames = {};
         for( var i = 0; i < scalarList.length; ++i ) {
@@ -192,35 +236,35 @@ dbv.gui.meshPanel = function (mesh, points, scalarList, renderer) {
         switchController.onChange( function(value) {
             dbv.mesh.switchScalars(scalarList[value].data, mesh, points );
         });
+        // open the folder
+        scalarsgui.open();
     }
-    // open the folder
-    scalarsgui.open();
 }
 
 /**
-* Volmue panel.
+* Add a volume panel to a root GUI.
 * Needs to be created during onShowtime(..) since we do not know the
 * volume dimensions before the loading was completed.
+* @param root The root GUI.
 * @param volume The associated X.volume.
 */
-dbv.gui.volumePanel = function (volume) {
-    var gui = new dat.GUI();
+dbv.gui.addVolumePanel = function (root, volume) {
     // the following configures the gui for interacting with the X.volume
-    var volumegui = gui.addFolder('Volume');
+    var volumegui = root.addFolder('Volume');
 
     // the indexX,Y,Z are the currently displayed slice indices in the range
     // 0..dimensions-1
-    var sliceXController = volumegui.add(volume, 'indexX', 0,
+    volumegui.add(volume, 'indexX', 0,
         volume.dimensions[0] - 1).step(1);
-    var sliceYController = volumegui.add(volume, 'indexY', 0,
+    volumegui.add(volume, 'indexY', 0,
         volume.dimensions[1] - 1).step(1);
-    var sliceZController = volumegui.add(volume, 'indexZ', 0,
+    volumegui.add(volume, 'indexZ', 0,
         volume.dimensions[2] - 1).step(1);
 
     // contrast
-    var lowerWindowController = volumegui.add(volume, 'windowLow', volume.min,
+    volumegui.add(volume, 'windowLow', volume.min,
         volume.max).step(1);
-    var upperWindowController = volumegui.add(volume, 'windowHigh', volume.min,
+    volumegui.add(volume, 'windowHigh', volume.min,
         volume.max).step(1);
 
     // open the folder
@@ -234,7 +278,7 @@ dbv.gui.volumePanel = function (volume) {
  * @param {Object} row The row to append the cell to.
  * @param {Object} object The object to insert in the cell.
  */
-dbv.gui.appendCell = function(row, object)
+dbv.gui.appendCell = function (row, object)
 {
     var cell = row.insertCell(-1);
     cell.appendChild(object);
@@ -247,7 +291,7 @@ dbv.gui.appendCell = function(row, object)
  * @param {Object} row The row to append the header cell to.
  * @param {String} text The text of the header cell.
  */
-dbv.gui.appendHCell = function(row, text)
+dbv.gui.appendHCell = function (row, text)
 {
     var cell = document.createElement("th");
     cell.appendChild(document.createTextNode(text));
@@ -263,7 +307,7 @@ dbv.gui.appendHCell = function(row, text)
 * @param {Object} rowCallback The callback to run with row information.
 * @return {Object} The created HTML table.
 */
-dbv.gui.toTable = function(input, header, rowCallback)
+dbv.gui.toTable = function (input, header, rowCallback)
 {
     var table = document.createElement('table');
     // body
@@ -289,7 +333,7 @@ dbv.gui.toTable = function(input, header, rowCallback)
 * @param {Object} callback The callback to run with element information.
 * @return {Object} The created HTML list.
 */
-dbv.gui.toList = function(input, callback)
+dbv.gui.toList = function (input, callback)
 {
     var list = document.createElement('ul');
     // body
@@ -300,3 +344,32 @@ dbv.gui.toList = function(input, callback)
     // return
     return list;
 };
+
+/**
+* Hide or show the file chooser div.
+* @param flag If true, will hide the div. Otherwise displays it.
+*/
+dbv.gui.hideFileChoose = function (flag) {
+    // hide file load
+    var div = document.getElementById('fileChoose');
+    if ( div ) {
+        div.style.display = flag ? 'none' : '';
+    }
+}
+
+/**
+* Simple listener storage.
+*/
+dbv.gui.Listeners = function () {
+    this.list = [];
+}
+//! Add a listener to the list.
+dbv.gui.Listeners.prototype.add = function (listener) {
+    this.list.push(listener);
+}
+//! Run all listeners.
+dbv.gui.Listeners.prototype.run = function () {
+    for ( var i=0; i < this.list.length; ++i ) {
+        this.list[i]();
+    }
+}

@@ -240,7 +240,6 @@ dbv.mesh.parseVtk = function ( buffer ) {
         var sliceFieldData = text.slice( indexField );
         // data name
         var stringsFieldData = sliceFieldData.match( pattStr );
-        var fieldDataName = stringsFieldData[2];
         // data
         var fieldData = sliceFieldData.match( pattNum );
         // first element is the number of fields
@@ -370,39 +369,72 @@ dbv.mesh.switchScalars = function (scalars, mesh, points) {
 };
 
 /**
-* Get a X.renderer3D for the input data.
-* @param displayDivName The name of the HTML div in which to put the rendered mesh.
-* @param sync
+* Add shaders to a X.renderer3D.
+* @param renderer The renderer to whom to add teh shaders.
 */
-dbv.mesh.getRenderer = function (displayDivName) {
-    // display div
-    var displayDiv = document.getElementById(displayDivName);
-    // clean div
-    dbv.gui.cleanNode(displayDiv);
-    // create a new 3d renderer
-    var renderer = new X.renderer3D();
-    renderer.container = displayDiv;
-    renderer.init();
-    // re-position the camera to face the mesh
-    renderer.camera.position = [0.0, 0.0, 100.0];
-    // shader
+dbv.mesh.addShadersToRenderer = function (renderer) {
     var shaders = new X.shaders();
     shaders.vertex = dbv.mesh.getVertexShader('rainbow-5step');
     renderer.addShaders(shaders);
-    // return
-    return renderer;
 }
 
 /**
-* Render the selected files.
-* @param meshFile Either a instance of a File or path to the mesh file.
-* @param displayDivName The name of the HTML div in which to put the rendered mesh.
-* @param callback A callback function that will be run at the end of the 'onload' function.
-* @param options Extra options.
+* Get a X.mesh from a File or Http source.
+* @param source The File or Http source.
+* @param fileName The origin file name.
+* @param isFileSource Flag to know if the source is from File or Http.
 */
-dbv.mesh.render = function (meshFile, displayDivName, callback, options) {
+dbv.mesh.getMesh = function (source, fileName, isFileSource) {
+    // extract scalar data
+    var data = dbv.mesh.parseVtk( source );
+    // filter out non scalars|field
+    var scalarList = [];
+    for ( var i = 0; i < data.scalars.length; ++i ) {
+        if ( data.scalars[i].type === 'scalars' ||
+            data.scalars[i].type === 'field') {
+            scalarList.push( data.scalars[i] );
+        }
+    }
+    // create X.mesh
+    var mesh = new X.mesh();
+    mesh.file = fileName;
+    // mesh default color: grey
+    mesh.color = [0.8, 0.8, 0.8];
+    // pass the data to the X.mesh
+    if ( isFileSource ) {
+        mesh.filedata = source;
+    }
+
+    var meshCallback = function () {
+        if ( scalarList.length != 0 ) {
+            var scalars = dbv.mesh.filterScalars(mesh.points, data.points, scalarList[0].data);
+            dbv.mesh.appendScalars(mesh, scalars);
+        }
+    };
+
+    var panelCallback = function (root, renderer) {
+        dbv.gui.addMeshPanel(root, mesh, data.points, scalarList, renderer);
+    }
+
+    return {'object': mesh,
+        'showtimeCallback': meshCallback,
+        'panelCallback': panelCallback };
+}
+
+/**
+* Render mesh files.
+* @param renderer The renderer to add to.
+* @param files Either a instance of a File or path to the mesh file.
+* @param callback A callback function that will be run at the end of the 'onload' function.
+* @param gui Optional gui to add panels to.
+* @param showtimeListeners Listereners to be run at showtime.
+* @param translation A translation to apply to the mesh.
+*/
+dbv.mesh.render = function (renderer, files, callback, gui, showtimeListeners, translation) {
     // check mesh file
     var isFile = false;
+    // yet only support for one file
+    var meshFile = files[0];
     var meshFileName;
     if ( typeof(meshFile) === 'undefined' ) {
         var message = 'Please provide a valid file.';
@@ -416,80 +448,50 @@ dbv.mesh.render = function (meshFile, displayDivName, callback, options) {
         meshFileName = meshFile;
     }
 
-    // options
-    var withPanel = false;
-    if ( typeof(options.withPanel) != 'undefined' ) {
-        withPanel = options.withPanel;
-    }
-
-    // get extension
+    // check extension
     var extension = meshFileName.split('.').pop();
     if ( extension !== 'vtk' ) {
         var message = 'Unsupported file format: ' + extension;
         throw new Error(message);
     }
 
-    // create a mesh from the input file
-    var mesh = new X.mesh();
-    mesh.file = meshFileName;
-    // mesh color: grey
-    mesh.color = [0.8, 0.8, 0.8];
-
-    // mesh points and scalars
-    var points = null;
-    var scalarList = [];
-
-    // call the update method when ready
-    var sync = dbv.gui.callWhenDone( function () {
-        // apply scalars if available
-        if ( scalarList.length != 0 ) {
-            var scalars = dbv.mesh.filterScalars(mesh.points, points, scalarList[0].data);
-            dbv.mesh.appendScalars(mesh, scalars);
-        }
-    });
-
+    // add the object to the renderer
     if ( isFile ) {
         var reader = new FileReader();
-        sync(1); // add method to synchronise
         reader.onload = function (event) {
+            // get mesh
             var res;
             try {
-                res = dbv.mesh.parseVtk( event.target.result );
+                res = dbv.mesh.getMesh( event.target.result, meshFileName, true );
             }
             catch (error) {
                 dbv.gui.onError(error.message);
                 callback(false);
-                reader.abort();
+                this.abort();
                 return;
             }
-            // filter out non scalars|field
-            for ( var i = 0; i < res.scalars.length; ++i ) {
-                if ( res.scalars[i].type === 'scalars' ||
-                    res.scalars[i].type === 'field')
-                scalarList.push( res.scalars[i] );
-            }
-            points = res.points;
-            // pass the data to the X.mesh
-            mesh.filedata = event.target.result;
-            // add the object to the renderer
-            var renderer = dbv.mesh.getRenderer(displayDivName);
             // the onShowtime method gets executed after all files were fully loaded and
-            // just before the first rendering attempt: wait for it to change the scalars.
-            sync(1); // add method to synchronise
-            renderer.onShowtime = function () {
-                // remove from synchronise before setting the GUI
-                sync(-1);
+            // just before the first rendering attempt.
+            showtimeListeners.add( function () {
+                // mesh callback to update scalars: has to be done now since the
+                // final mesh points are not set before.
+                res.showtimeCallback();
                 // create panel
-                if ( withPanel ) {
-                    dbv.gui.meshPanel(mesh, points, scalarList, this);
+                if ( gui ) {
+                    res.panelCallback(gui, this);
                 }
+                // call input callback
+                callback(true);
+            });
+            // transform
+            var mesh = res.object;
+            if ( translation ) {
+                mesh.transform.translateX( translation.x );
+                mesh.transform.translateY( translation.y );
+                mesh.transform.translateZ( translation.z );
             }
             renderer.add(mesh);
             renderer.render();
-            // call input callback
-            callback(true);
-            // done, decrement synchronise
-            sync(-1);
         }
         reader.onerror = function (event) {
             dbv.gui.onError(event.message);
@@ -502,46 +504,42 @@ dbv.mesh.render = function (meshFile, displayDivName, callback, options) {
         var request = new XMLHttpRequest();
         request.open('GET', meshFileName, true);
         request.responseType = 'text';
-        sync(1); // add method to synchronise
-        request.onload = function (event) {
+        request.onload = function (/*event*/) {
+            // get mesh
             var res;
             try {
-                res = dbv.mesh.parseVtk( this.response );
+                res = dbv.mesh.getMesh( this.response, meshFileName, false );
             }
             catch (error) {
                 dbv.gui.onError(error.message);
                 callback(false);
-                request.abort();
+                this.abort();
                 return;
             }
-            // filter out non scalars|field
-            for ( var i = 0; i < res.scalars.length; ++i ) {
-                if ( res.scalars[i].type === 'scalars' ||
-                    res.scalars[i].type === 'field')
-                scalarList.push( res.scalars[i] );
-            }
-            points = res.points;
-            // add the object to the renderer
-            var renderer = dbv.mesh.getRenderer(displayDivName);
             // the onShowtime method gets executed after all files were fully loaded and
-            // just before the first rendering attempt: wait for it to change the scalars.
-            sync(1); // add method to synchronise
-            renderer.onShowtime = function () {
-                // remove from synchronise before setting the GUI
-                sync(-1);
+            // just before the first rendering attempt.
+            showtimeListeners.add( function () {
+                // mesh callback to update scalars: has to be done now since the
+                // final mesh points are not set before.
+                res.showtimeCallback();
                 // create panel
-                if ( withPanel ) {
-                    dbv.gui.meshPanel(mesh, points, scalarList, this);
+                if ( gui ) {
+                    res.panelCallback(gui, this);
                 }
-            };
+                // call input callback
+                callback(true);
+            });
+            // transform
+            var mesh = res.object;
+            if ( translation ) {
+                mesh.transform.translateX( translation.x );
+                mesh.transform.translateY( translation.y );
+                mesh.transform.translateZ( translation.z );
+            }
             renderer.add(mesh);
             renderer.render();
-            // call input callback
-            callback(true);
-            // done, decrement synchronise
-            sync(-1);
         };
-        request.onerror = function (event) {
+        request.onerror = function (/*event*/) {
             dbv.gui.onError('Error in XMLHttpRequest, status: '+this.status);
             callback(false);
         }

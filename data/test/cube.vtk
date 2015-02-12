@@ -27,6 +27,11 @@ POLYGONS 12 48
 3 23 21 17 
 
 POINT_DATA 24
+SCALARS ID float
+LOOKUP_TABLE default
+0 1 2 3 4 5 6 7 0 
+0 1 1 2 2 3 3 4 4 
+5 5 6 6 7 7 
 NORMALS Normals float
 0 0 1 0 0 1 0 0 1 
 0 0 1 0 1 0 0 1 0 
@@ -36,12 +41,7 @@ NORMALS Normals float
 1 0 0 1 0 0 0 0 -1 
 -1 0 0 0 0 -1 0 -1 0 
 0 0 -1 1 0 0 0 0 -1 
-
-FIELD FieldData 5
-ID 1 24 float
-0 1 2 3 4 5 6 7 0 
-0 1 1 2 2 3 3 4 4 
-5 5 6 6 7 7 
+FIELD FieldData 4
 FaceA 1 24 int
 0 0 0 0 1 1 1 1 0 0 0 0
 0 0 0 0 1 1 1 1 1 1 1 1

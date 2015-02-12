@@ -182,18 +182,30 @@ function appendRow(table, input, name)
 * Render the input mesh file.
 * @param file The file to render. Either a path or a File.
 */
-function renderMeshFile(file) {
-    // callback
+function renderMeshFile(files) {
+    // callback to hide the file choose div
     var callback = function () {};
-    // options
-    var options = {'withPanel': false};
-    // load data
+    // main renderer
+    var renderer = dbv.gui.getRenderer3D('display', [0, -150, 0]);
+    // showtime setting
+    var showtimeListeners = new dbv.gui.Listeners();
+    renderer.onShowtime = function () {
+        showtimeListeners.run();
+    };
+    // gui panel
+    var gui = null;
+    // mesh translation
+    var translation = {'x': 0, 'y': 0, 'z': 0 };
+
+    // render
     try {
-        dbv.mesh.render(file, 'display', callback, options);
+        dbv.mesh.addShadersToRenderer(renderer);
+        dbv.mesh.render(renderer, files, callback, gui, showtimeListeners, translation);
     }
     catch(error) {
         dbv.gui.displayMessage({'type': 'error', 'text': error.message});
     }
+
 }
 
 /**
@@ -225,7 +237,7 @@ function renderData(id) {
     }
     // mesh
     var meshKeys = Object.keys(data[id].mesh);
-    renderMeshFile( data[id].mesh[meshKeys[0]] );
+    renderMeshFile( [data[id].mesh[meshKeys[0]]] );
     // volume
     var volKeys = Object.keys(data[id].volume);
     renderVolumeFile( data[id].volume[volKeys[0]] );

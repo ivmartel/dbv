@@ -31,3 +31,43 @@ dbv.browser.checkWebGL = function (message) {
     // success
     return true;
 };
+
+/**
+* Decode an input uri to get files names.
+* One file: 'volume.html?input=a.dcm'.
+* Multiple files: 'volume.html?input=encoded[path/to/files?file=a&file=b]'.
+* @param uri The input URI.
+* @return The list of files given by the URI.
+*/
+dbv.browser.decodeUri = function (uri) {
+    var res = [];
+    // expect a file or a root and multiple files
+    var qmarkIndex = uri.indexOf('?');
+    if ( qmarkIndex != -1 ) {
+        var key = uri.substr(qmarkIndex+1, 5);
+        if ( key === 'input' ) {
+            var encoded = uri.substr(qmarkIndex+7);
+            var decoded = decodeURIComponent(encoded);
+            var qmarkIndex2 = decoded.indexOf('?');
+            // one file
+            if ( qmarkIndex2 === -1 ) {
+                res = [decoded];
+            }
+            // multiple files
+            else {
+                var root = decoded.substr(0, qmarkIndex2 );
+                var filesStr = decoded.substr(qmarkIndex2+1);
+                var files = filesStr.split('&');
+                var paths = [];
+                for ( var i = 0; i < files.length; ++i ) {
+                    var split = files[i].split('=');
+                    if ( split[0] === 'file' ) {
+                        paths.push( root + split[1] );
+                    }
+                }
+                res = paths;
+            }
+        }
+    }
+    return res;
+}

@@ -17,13 +17,21 @@ html, body {
 <!-- Third parties -->
 <script type='text/javascript' src='../ext/X/xtk.js'></script>
 <script type='text/javascript' src='../ext/X/xtk_xdat.gui.js'></script>
+
 <!-- Local sources -->
 <script type='text/javascript' src='../src/browser.js'></script>
 <script type='text/javascript' src='../src/gui.js'></script>
 <script type='text/javascript' src='../src/math.js'></script>
 <script type='text/javascript' src='../src/mesh.js'></script>
 
+<!--<script type='text/javascript' src='../ext/X/lib/google-closure-library/closure/goog/base.js'></script>
+<script type='text/javascript' src='../ext/X/xtk-deps.js'></script>-->
+
 <script type='text/javascript'>
+/*goog.require('X.renderer3D');
+goog.require('X.scalars');
+goog.require('X.mesh');*/
+
 /**
 * Window Onload: check webgl support and setup.
 */
@@ -31,84 +39,53 @@ window.onload = function() {
     // check webGL
     var message = {};
     if ( !dbv.browser.checkWebGL(message) ) {
-        dbv.gui.displayError(message);
+        dbv.gui.displayMessage(message);
         return;
     }
-    // possible path in uri: [root]?input=a.vtk
-    var uri = window.location.href;
-    var qmarkIndex = uri.indexOf('?');
-    // expect a vtk file, minimum: 'a.vtk' (len=5)
-    var loadedLink = false;
-    if ( qmarkIndex != -1 && qmarkIndex < uri.length - 11 ) {
-        var key = uri.substr(qmarkIndex+1, 5);
-        if ( key === 'input' ) {
-            loadedLink = true;
-            renderFile(uri.substr(qmarkIndex+7));
-        }
+    // either load files from URI or show file box
+    var files = dbv.browser.decodeUri(window.location.href);
+    if ( files.length != 0 ) {
+        renderFiles(files);
     }
-    if ( !loadedLink ) {
+    else {
         // file choose box
         var div = document.getElementById("fileChoose");
         if ( div ) {
             // show the box
-            hideFileChoose(false);
+            dbv.gui.hideFileChoose(false);
             // handle drag/drop
             div.addEventListener("dragover", dbv.gui.onDragOver);
             div.addEventListener("dragleave", dbv.gui.onDragLeave);
-            div.addEventListener("drop", onDrop);
+            div.addEventListener("drop", dbv.gui.onDrop);
         }
     }
 }
 
 /**
-* Handle file change.
-* @param source The source of the file, a HTML input.
+* Render the input files.
+* @param files The files to render. An array of either paths or File objects.
 */
-function onFileChange(source) {
-    // render
-    renderFile(source.files[0])
-}
-
-/**
-* Handle drop events.
-* @param event A drop event.
-*/
-function onDrop(event) {
-    // prevent default handling
-    event.stopPropagation();
-    event.preventDefault();
-    // change style to not hover
-    this.className = '';
-    // render
-    renderFile(event.dataTransfer.files[0]);
-}
-
-/**
-* Hide or show the file chooser div.
-* @param flag If true, will hide the div. Otherwise displays it.
-*/
-function hideFileChoose(flag) {
-    // hide file load
-    var div = document.getElementById('fileChoose');
-    if ( div ) {
-        div.style.display = flag ? 'none' : '';
-    }
-}
-
-/**
-* Render the input file.
-* @param file The file to render. Either a path or a File.
-*/
-function renderFile(file) {
+function renderFiles(files) {
     // remove possible error message
     dbv.gui.removeNode('error');
     // callback to hide the file choose div
-    var callback = hideFileChoose;
-    // options
-    var options = {'withPanel': true};
-    // load data
+    var callback = dbv.gui.hideFileChoose;
+    // main renderer
+    var renderer = dbv.gui.getRenderer3D('display', [0, -150, 0]);
+    // showtime setting
+    var showtimeListeners = new dbv.gui.Listeners();
+    renderer.onShowtime = function () {
+        showtimeListeners.run();
+    };
+    // gui panel
+    var gui = new dat.GUI();
+    // mesh translation
+    var translation = {'x': 0, 'y': 0, 'z': 0 };
+
+    // render
     try {
-        dbv.mesh.render(file, 'display', callback, options);
+        dbv.mesh.addShadersToRenderer(renderer);
+        dbv.mesh.render(renderer, files, callback, gui, showtimeListeners, translation);
     }
     catch(error) {
         dbv.gui.displayMessage({'type': 'error', 'text': error.message});
@@ -124,11 +101,11 @@ function renderFile(file) {
 <h1>Mesh web viewer</h1>
 <p>Drag and drop<p>
 <p>OR</p>
-<input type='file' id='meshFile' multiple='false' onchange='onFileChange(this)'/>
+<input type='file' id='inputFile' multiple='false' onchange='dbv.gui.onFileChange(this)'/>
 <p>Test:
-    <a href='#' onclick="renderFile('../data/test/cube.vtk')">cube</a>,
-    <a href='#' onclick="renderFile('../data/test/cube-wn.vtk')">cube-wn</a>,
-    <a href='#' onclick="renderFile('../data/test/cube-bad_binary.vtk')">cube-bad_binary</a>
+    <a href='#' onclick="renderFiles(['../data/test/cube.vtk'])">cube</a>,
+    <a href='#' onclick="renderFiles(['../data/test/cube-no_normals.vtk'])">cube-wn</a>,
+    <a href='#' onclick="renderFiles(['../data/test/cube-bad_binary.vtk'])">cube-bad_binary</a>
 </p>
 </div>
 

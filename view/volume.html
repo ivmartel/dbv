@@ -17,6 +17,7 @@ html, body {
 <!-- Third parties -->
 <script type='text/javascript' src='../ext/X/xtk.js'></script>
 <script type='text/javascript' src='../ext/X/xtk_xdat.gui.js'></script>
+
 <!-- Local sources -->
 <script type='text/javascript' src='../src/browser.js'></script>
 <script type='text/javascript' src='../src/gui.js'></script>
@@ -24,12 +25,12 @@ html, body {
 <script type='text/javascript' src='../src/volume.js'></script>
 
 <!--<script type='text/javascript' src='../ext/X/lib/google-closure-library/closure/goog/base.js'></script>
-<script type='text/javascript' src='../ext/X/xtk-deps.js'></script>
-<script type='text/javascript'>
-goog.require('X.renderer3D');
-goog.require('X.volume');-->
+<script type='text/javascript' src='../ext/X/xtk-deps.js'></script>-->
 
 <script type='text/javascript'>
+/*goog.require('X.renderer3D');
+goog.require('X.volume');*/
+
 /**
 * Window Onload: check webgl support and setup.
 */
@@ -37,109 +38,54 @@ window.onload = function() {
     // check webGL
     var message = {};
     if ( !dbv.browser.checkWebGL(message) ) {
-        dbv.gui.displayError(message);
+        dbv.gui.displayMessage(message);
         return;
     }
-    // possible path in uri: [root]?input=a.vtk
-    var uri = window.location.href;
-    var qmarkIndex = uri.indexOf('?');
-    // expect a file or a root and multiple files
-    var loadedLink = false;
-    if ( qmarkIndex != -1 ) {
-        var key = uri.substr(qmarkIndex+1, 5);
-        if ( key === 'input' ) {
-            var encoded = uri.substr(qmarkIndex+7);
-            var decoded = decodeURIComponent(encoded);
-            var qmarkIndex2 = decoded.indexOf('?');
-            // one file
-            if ( qmarkIndex2 === -1 ) {
-                loadedLink = true;
-                renderFiles([decoded]);
-            }
-            // multiple files
-            else {
-                var root = decoded.substr(0, qmarkIndex2 );
-                var filesStr = decoded.substr(qmarkIndex2+1);
-                var files = filesStr.split('&');
-                var paths = [];
-                for ( var i = 0; i < files.length; ++i ) {
-                    var split = files[i].split('=');
-                    if ( split[0] === 'file' ) {
-                        paths.push( root + split[1] );
-                    }
-                }
-                loadedLink = true;
-                renderFiles(paths);
-            }
-        }
+    // either load files from URI or show file box
+    var files = dbv.browser.decodeUri(window.location.href);
+    if ( files.length != 0 ) {
+        renderFiles(files);
     }
-    if ( !loadedLink ) {
+    else {
         // file choose box
         var div = document.getElementById("fileChoose");
         if ( div ) {
             // show the box
-            hideFileChoose(false);
+            dbv.gui.hideFileChoose(false);
             // handle drag/drop
             div.addEventListener("dragover", dbv.gui.onDragOver);
             div.addEventListener("dragleave", dbv.gui.onDragLeave);
-            div.addEventListener("drop", onDrop);
+            div.addEventListener("drop", dbv.gui.onDrop);
         }
     }
 }
 
 /**
-* Handle file change.
-* @param source The source of the file, a HTML input.
-*/
-function onFileChange(source) {
-    // render
-    renderFiles(source.files)
-}
-
-/**
-* Handle drop events.
-* @param event A drop event.
-*/
-function onDrop(event) {
-    // prevent default handling
-    event.stopPropagation();
-    event.preventDefault();
-    // change style to not hover
-    this.className = '';
-    // render
-    renderFiles(event.dataTransfer.files);
-}
-
-/**
-* Hide or show the file chooser div.
-* @param flag If true, will hide the div. Otherwise displays it.
-*/
-function hideFileChoose(flag) {
-    // hide file load
-    var div = document.getElementById('fileChoose');
-    if ( div ) {
-        div.style.display = flag ? 'none' : '';
-    }
-}
-
-/**
-* Render the input file.
-* @param files The files to render. Either a path or a File.
+* Render the input files.
+* @param files The files to render. An array of either paths or File objects.
 */
 function renderFiles(files) {
     // remove possible error message
     dbv.gui.removeNode('error');
     // callback to hide the file choose div
-    var callback = hideFileChoose;
-    // options
-    var options = {'withPanel': true};
-    // load data
-    //try {
-        dbv.volume.render(files, 'display', callback, options);
-    /*}
+    var callback = dbv.gui.hideFileChoose;
+    // main renderer
+    var renderer = dbv.gui.getRenderer3D('display', [10, 170, 0]);
+    // showtime setting
+    var showtimeListeners = new dbv.gui.Listeners();
+    renderer.onShowtime = function () {
+        showtimeListeners.run();
+    };
+    // gui panel
+    var gui = new dat.GUI();
+
+    // render
+    try {
+        dbv.volume.render(renderer, files, callback, gui, showtimeListeners);
+    }
     catch(error) {
         dbv.gui.displayMessage({'type': 'error', 'text': error.message});
-    }*/
+    }
 }
 </script>
 </head>
@@ -151,7 +97,7 @@ function renderFiles(files) {
 <h1>Volume web viewer</h1>
 <p>Drag and drop<p>
 <p>OR</p>
-<input type='file' id='meshFile' multiple='false' onchange='onFileChange(this)'/>
+<input type='file' id='inputFile' multiple='false' onchange='dbv.gui.onFileChange(this)'/>
 <p>Test:
     <a href='#' onclick="renderFiles(['../data/test/pig24-0-0.dcm'])">pig24</a>,
     <a href='#' onclick="renderFiles(['../data/test/cta.dcm'])">cta</a>
