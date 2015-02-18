@@ -1,5 +1,6 @@
 {
-    "Test" : {
+    "dbname" : "Test DB",
+    "TestData" : {
         "mesh" : {
             "Cube": "data/test/cube.vtk",
             "Cube (150 points)": "data/test/cube-150.vtk",

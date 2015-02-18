@@ -276,6 +276,13 @@ window.onload = function() {
     }
     // load data file
     $.getJSON('data.json', function (json) {
+        // set db title
+        if ( json.dbname ) {
+            var title = document.getElementById('dbname');
+            title.appendChild(document.createTextNode(json.dbname));
+            delete json.dbname;
+        }
+        // create data table
         var dataTable = new DataHTMLTable(json);
         dataTable.show();
         // listen to change
@@ -290,7 +297,7 @@ window.onload = function() {
 
 <body>
 
-<h1></h1>
+<h1 id="dbname"></h1>
 
 <div>
 <p>See the <a href="help.html">help</a> page for browser settings.</p>
