@@ -53,9 +53,6 @@ dwv.gui.getWindowSize = function(){
 
 <script type="text/javascript">
 
-// the data list: global object
-var data;
-
 /**
 * Get the mesh info HTML element. A mesh info is made of:
 * { 'fileId0' : 'file0', 'fileId1' : 'file1', (...) }
@@ -85,7 +82,7 @@ function getMeshInfoElement(data) {
 *   'seriesId1' : { 'root': 'root1', 'files' : { '0': 'file10', '1': 'file11', (...) },
 *   (...) }
 */
-function getVolumeInfoElement(data, viewType) {
+function getVolumeInfoElement(volume, viewType) {
     var element = document.createElement('p');
     // two types: volume|slice
     var linkRoot;
@@ -96,12 +93,12 @@ function getVolumeInfoElement(data, viewType) {
         linkRoot = 'view/mobile/index.html';
     }
     // loop through data
-    var keys = Object.keys(data);
+    var keys = Object.keys(volume);
     for ( var i = 0; i < keys.length; ++i ) {
-        var volumeInfo = data[keys[i]];
-        var dataLink = getVolumeLinkStr(volumeInfo.root, volumeInfo.files, viewType);
+        var volumeInfo = volume[keys[i]];
+        var volumeLink = getVolumeLinkStr(volumeInfo.root, volumeInfo.files, viewType);
         var link = document.createElement('a');
-        link.href = linkRoot + '?input=' + dataLink + '&dwvReplaceMode=void';
+        link.href = linkRoot + '?input=' + volumeLink + '&dwvReplaceMode=void';
         link.appendChild( document.createTextNode( keys[i]) );
         link.target = '_parent';
         if ( i !== 0 ) element.appendChild( document.createTextNode(', '));
@@ -177,7 +174,7 @@ function appendRow(table, input, name)
         link.href = '#';
         link.appendChild( document.createTextNode( 'preview' ) );
         link.onclick = function () {
-            renderData(name);
+            renderData(name, input);
         };
         pComments.appendChild(link);
         pComments.appendChild( document.createTextNode('.'));
@@ -219,9 +216,9 @@ function renderMeshFile(files) {
 * Render the input volume file.
 * @param file The file to render. Either a path or a File.
 */
-function renderVolumeFile(data) {
-    // load data
-    var links = getVolumesFileArray( data.root, data.files );
+function renderVolumeFile(volume) {
+    // load volume
+    var links = getVolumesFileArray( volume.root, volume.files );
     app.loadURL(links);
 }
 
@@ -230,7 +227,7 @@ function renderVolumeFile(data) {
 * @param meshFile The mesh file to render. Either a path or a File.
 * @param volumeFile The volume file to render.
 */
-function renderData(id) {
+function renderData(id, data) {
     // show the div
     var preview = document.getElementById('preview');
     preview.style.display = '';
@@ -243,26 +240,29 @@ function renderData(id) {
         div.appendChild( para );
     }
     // mesh
-    var meshKeys = Object.keys(data[id].mesh);
-    renderMeshFile( [data[id].mesh[meshKeys[0]]] );
+    var meshKeys = Object.keys(data.mesh);
+    renderMeshFile( [data.mesh[meshKeys[0]]] );
     // volume
-    var volKeys = Object.keys(data[id].volume);
-    renderVolumeFile( data[id].volume[volKeys[0]] );
+    var volKeys = Object.keys(data.volume);
+    renderVolumeFile( data.volume[volKeys[0]] );
 }
 
 /**
-* Append the Data HTML table.
+* Data HTML table.
 */
-function appendDataHTMLTable() {
-    // clear previous possible table
-    dbv.gui.removeNode('dataTable');
-    // show the data in a table
-    var header = ['Data name', 'Mesh', 'Volume', 'Comments'];
-    var table = dbv.gui.toTable(data, header, appendRow);
-    table.id = 'dataTable';
-    var div = document.getElementById('dataList');
-    div.appendChild(table);
-}
+var DataHTMLTable = function (data)
+{
+    this.show = function () {
+        // clear previous possible table
+        dbv.gui.removeNode('dataTable');
+        // show the data in a table
+        var header = ['Data name', 'Mesh', 'Volume', 'Comments'];
+        var table = dbv.gui.toTable(data, header, appendRow);
+        table.id = 'dataTable';
+        var div = document.getElementById('dataList');
+        div.appendChild(table);
+    };
+};
 
 /**
 * Window Onload: check webgl support and setup.
@@ -276,13 +276,13 @@ window.onload = function() {
     }
     // load data file
     $.getJSON('data.json', function (json) {
-        data = json;
-        appendDataHTMLTable();
+        var dataTable = new DataHTMLTable(json);
+        dataTable.show();
         // listen to change
         var nodeV = document.getElementById('radio-view-volume');
-        nodeV.onchange = appendDataHTMLTable;
+        nodeV.onchange = dataTable.show;
         var nodeS = document.getElementById('radio-view-slice');
-        nodeS.onchange = appendDataHTMLTable;
+        nodeS.onchange = dataTable.show;
     });
 }
 </script>
@@ -290,7 +290,7 @@ window.onload = function() {
 
 <body>
 
-<h1>%DBNAME%: data</h1>
+<h1></h1>
 
 <div>
 <p>See the <a href="help.html">help</a> page for browser settings.</p>
