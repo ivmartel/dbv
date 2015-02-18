@@ -448,11 +448,13 @@ dbv.mesh.render = function (renderer, files, callback, gui, showtimeListeners, t
         meshFileName = meshFile;
     }
 
-    // check extension
-    var extension = meshFileName.split('.').pop();
-    if ( extension !== 'vtk' ) {
-        var message = 'Unsupported file format: ' + extension;
-        throw new Error(message);
+    // check extension if file
+    if ( !dbv.browser.isLink(meshFileName) ) {
+        var extension = meshFileName.split('.').pop();
+        if ( extension !== 'vtk' ) {
+            var message = 'Unsupported file format: ' + extension;
+            throw new Error(message);
+        }
     }
 
     // add the object to the renderer

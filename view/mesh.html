@@ -43,7 +43,7 @@ window.onload = function() {
         return;
     }
     // either load files from URI or show file box
-    var files = dbv.browser.decodeUri(window.location.href);
+    var files = dbv.browser.decodeUri(window.location.href, false);
     if ( files.length != 0 ) {
         renderFiles(files);
     }

@@ -33,13 +33,31 @@ dbv.browser.checkWebGL = function (message) {
 };
 
 /**
+* Return true if the input string is a link.
+* Checks that the string starts with 'http://' or 'https://'.
+* @param string The input string.
+* @return True if link, false otherwise.
+*/
+dbv.browser.isLink = function (string) {
+    if ( string.substr(0,7) === "http://" ||
+        string.substr(0,8) === "https://" ) {
+            return true;
+        }
+    return false;
+
+}
+
+/**
 * Decode an input uri to get files names.
 * One file: 'volume.html?input=a.dcm'.
 * Multiple files: 'volume.html?input=encoded[path/to/files?file=a&file=b]'.
 * @param uri The input URI.
 * @return The list of files given by the URI.
 */
-dbv.browser.decodeUri = function (uri) {
+dbv.browser.decodeUri = function (uri, multiple) {
+    if ( typeof multiple === 'undefined' ) {
+        multiple = true;
+    }
     var res = [];
     // expect a file or a root and multiple files
     var qmarkIndex = uri.indexOf('?');
@@ -50,7 +68,7 @@ dbv.browser.decodeUri = function (uri) {
             var decoded = decodeURIComponent(encoded);
             var qmarkIndex2 = decoded.indexOf('?');
             // one file
-            if ( qmarkIndex2 === -1 ) {
+            if ( !multiple || qmarkIndex2 === -1 ) {
                 res = [decoded];
             }
             // multiple files
