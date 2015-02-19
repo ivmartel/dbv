@@ -62,12 +62,19 @@ function getMeshInfoElement(data) {
     var keys = Object.keys(data);
     // possible redirection
     var redir = '';
-    if ( keys.length != 0 && !dbv.browser.isLink(data[keys[0]]) ) {
-        redir = "../"
+    var suffix = '';
+    if ( keys.length != 0 ) {
+        if ( !dbv.browser.isLink(data[keys[0]]) ) {
+            redir = "../"
+        }
+        else {
+            // see https://github.com/xtk/X/issues/106
+            suffix = "&.vtk"
+        }
     }
     for ( var i = 0; i < keys.length; ++i ) {
         var link = document.createElement('a');
-        link.href = 'view/mesh.html?input=' + encodeURIComponent(redir + data[keys[i]]);
+        link.href = 'view/mesh.html?input=' + encodeURIComponent(redir + data[keys[i]]) + suffix;
         link.appendChild( document.createTextNode( keys[i] ) );
         link.target = '_parent';
         if ( i !== 0 ) element.appendChild( document.createTextNode(', '));
@@ -241,7 +248,12 @@ function renderData(id, data) {
     }
     // mesh
     var meshKeys = Object.keys(data.mesh);
-    renderMeshFile( [data.mesh[meshKeys[0]]] );
+    var meshFile = data.mesh[meshKeys[0]];
+    // see https://github.com/xtk/X
+    if ( dbv.browser.isLink(meshFile) ) {
+        meshFile = meshFile + "&.vtk";
+    }
+    renderMeshFile( [meshFile] );
     // volume
     var volKeys = Object.keys(data.volume);
     renderVolumeFile( data.volume[volKeys[0]] );
