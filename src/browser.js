@@ -44,8 +44,7 @@ dbv.browser.isLink = function (string) {
             return true;
         }
     return false;
-
-}
+};
 
 /**
 * Decode an input uri to get files names.
@@ -88,4 +87,4 @@ dbv.browser.decodeUri = function (uri, multiple) {
         }
     }
     return res;
-}
+};

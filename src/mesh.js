@@ -11,8 +11,8 @@ dbv.mesh = dbv.mesh || {};
 dbv.mesh.toPrecision = function ( vector, digits ) {
     return [ vector[ 0 ].toPrecision(digits),
         vector[ 1 ].toPrecision(digits),
-        vector[ 2 ].toPrecision(digits) ]
-}
+        vector[ 2 ].toPrecision(digits) ];
+};
 
 /**
 * toPrecision method for a 3D string array.
@@ -25,7 +25,7 @@ dbv.mesh.strToPrecision = function ( vector, digits ) {
         parseFloat(vector[ 0 ]),
         parseFloat(vector[ 1 ]),
         parseFloat(vector[ 2 ]) ], digits );
-}
+};
 
 /**
 * Filter a scalar array to remove all un-matched points.
@@ -205,7 +205,7 @@ dbv.mesh.parseVtk = function ( buffer ) {
             }
             else {
                 stringsPointData2.push( stringsPointData[index] );
-                ++index
+                ++index;
             }
         }
         var nPointData = stringsPointData2.length / 3;
@@ -215,16 +215,16 @@ dbv.mesh.parseVtk = function ( buffer ) {
         var pointDataReadSize = pointData[0];
         // global check
         if ( pointDataReadSize != pointsSize ) {
-            var message = 'Not the expected number of point data: ' +
+            var message1 = 'Not the expected number of point data: ' +
                 pointDataReadSize + ' != ' + pointsSize;
-            throw new Error(message);
+            throw new Error(message1);
         }
         pointData = pointData.slice(1); // remove it
         // read all point data
         index = 0;
-        for ( var i = 0; i < nPointData; ++i ) {
-            var pointDataType = stringsPointData2[i*3].toLowerCase();
-            var pointDataName = stringsPointData2[i*3 + 1];
+        for ( var p = 0; p < nPointData; ++p ) {
+            var pointDataType = stringsPointData2[p*3].toLowerCase();
+            var pointDataName = stringsPointData2[p*3 + 1];
             var pointDataSize = pointDataReadSize;
             if ( pointDataType != 'scalars' ) {
                 pointDataSize *= 3;
@@ -248,8 +248,8 @@ dbv.mesh.parseVtk = function ( buffer ) {
         var fmul = 1;
         var fsize = 0;
         var fstart = 0;
-        for ( var i = 0; i < readNField; ++i ) {
-            var readFieldDataName = stringsFieldData[2 + i*2];
+        for ( var f = 0; f < readNField; ++f ) {
+            var readFieldDataName = stringsFieldData[2 + f*2];
             fmul = fieldData[fstart];
             fsize = fieldData[fstart + 1];
             fstart += 2;
@@ -258,15 +258,15 @@ dbv.mesh.parseVtk = function ( buffer ) {
             var nfielddata = localFieldData.length / fmul;
             // local check
             if ( nfielddata != fsize ) {
-                var message = 'Not the expected number of field data (' +
+                var message2 = 'Not the expected number of field data (' +
                     readFieldDataName + '): ' +
                     nfielddata + ' != ' + fsize;
-                throw new Error(message);
+                throw new Error(message2);
             }
             // global check
             if ( nfielddata != pointsSize ) {
-                var message = 'Too many/few field data: ' + nfielddata + ' != ' + pointsSize;
-                throw new Error(message);
+                var message3 = 'Too many/few field data: ' + nfielddata + ' != ' + pointsSize;
+                throw new Error(message3);
             }
             scalars.push( {'name': readFieldDataName, 'data': localFieldData, 'type': 'field'} );
         }
@@ -376,7 +376,7 @@ dbv.mesh.addShadersToRenderer = function (renderer) {
     var shaders = new X.shaders();
     shaders.vertex = dbv.mesh.getVertexShader('rainbow-5step');
     renderer.addShaders(shaders);
-}
+};
 
 /**
 * Get a X.mesh from a File or Http source.
@@ -406,7 +406,7 @@ dbv.mesh.getMesh = function (source, fileName, isFileSource) {
     }
 
     var meshCallback = function () {
-        if ( scalarList.length != 0 ) {
+        if ( scalarList.length !== 0 ) {
             var scalars = dbv.mesh.filterScalars(mesh.points, data.points, scalarList[0].data);
             dbv.mesh.appendScalars(mesh, scalars);
         }
@@ -414,12 +414,12 @@ dbv.mesh.getMesh = function (source, fileName, isFileSource) {
 
     var panelCallback = function (root, renderer) {
         dbv.gui.addMeshPanel(root, mesh, data.points, scalarList, renderer);
-    }
+    };
 
     return {'object': mesh,
         'showtimeCallback': meshCallback,
         'panelCallback': panelCallback };
-}
+};
 
 /**
 * Render mesh files.
@@ -452,8 +452,8 @@ dbv.mesh.render = function (renderer, files, callback, gui, showtimeListeners, t
     if ( !dbv.browser.isLink(meshFileName) ) {
         var extension = meshFileName.split('.').pop();
         if ( extension !== 'vtk' ) {
-            var message = 'Unsupported file format: ' + extension;
-            throw new Error(message);
+            var message1 = 'Unsupported file format: ' + extension;
+            throw new Error(message1);
         }
     }
 
@@ -494,11 +494,11 @@ dbv.mesh.render = function (renderer, files, callback, gui, showtimeListeners, t
             }
             renderer.add(mesh);
             renderer.render();
-        }
+        };
         reader.onerror = function (event) {
             dbv.gui.onError(event.message);
             callback(false);
-        }
+        };
         reader.readAsArrayBuffer(meshFile);
     }
     else {
@@ -544,10 +544,10 @@ dbv.mesh.render = function (renderer, files, callback, gui, showtimeListeners, t
         request.onerror = function (/*event*/) {
             dbv.gui.onError('Error in XMLHttpRequest, status: '+this.status);
             callback(false);
-        }
+        };
         request.send(null);
     }
-}
+};
 
 /**
 * Get local shaders vertex.
@@ -616,7 +616,7 @@ dbv.mesh.getVertexShader = function (type) {
 
     var t2 = '';
     if ( type === 'mwm' ) {
-        t2 += '        vec3 frequency = vec3(0.33, 0.33, 0.33);\n'
+        t2 += '        vec3 frequency = vec3(0.33, 0.33, 0.33);\n';
         t2 += '        vec3 zeroMaxColor;\n';
         t2 += '        zeroMaxColor[0] = scalarsMaxColor[0]*frequency[0];\n';
         t2 += '        zeroMaxColor[1] = scalarsMaxColor[1]*frequency[1];\n';
@@ -637,29 +637,29 @@ dbv.mesh.getVertexShader = function (type) {
         t2 += '        }\n';
     }
     else if ( type === 'rainbow-sin' ){
-        t2 += '        float PI = 3.14159265359;\n'
-        t2 += '        vec3 frequency = vec3(PI, 2.0*PI, PI);\n'
-        t2 += '        vec3 phase = vec3(0.5*PI, 1.5*PI, 1.5*PI);\n'
-        t2 += '        vec3 width = vec3(0.5, 0.5, 0.5);\n'
-        t2 += '        vec3 center = vec3(0.5, 0.5, 0.5);\n'
+        t2 += '        float PI = 3.14159265359;\n';
+        t2 += '        vec3 frequency = vec3(PI, 2.0*PI, PI);\n';
+        t2 += '        vec3 phase = vec3(0.5*PI, 1.5*PI, 1.5*PI);\n';
+        t2 += '        vec3 width = vec3(0.5, 0.5, 0.5);\n';
+        t2 += '        vec3 center = vec3(0.5, 0.5, 0.5);\n';
         t2 += '        fragmentColor = sin( scalarValue * frequency + phase ) * width + center;\n';
     }
     else if ( type === 'rainbow-3step' ){
-        t2 += '        float red = scalarValue < 0.5 ? -2.0 * scalarValue + 1.0 : 0.0;\n'
-        t2 += '        float green = scalarValue < 0.5 ? 2.0 * scalarValue : -2.0 * scalarValue + 2.0;\n'
-        t2 += '        float blue = scalarValue < 0.5 ? 0.0 : 2.0 * scalarValue - 1.0;\n'
+        t2 += '        float red = scalarValue < 0.5 ? -2.0 * scalarValue + 1.0 : 0.0;\n';
+        t2 += '        float green = scalarValue < 0.5 ? 2.0 * scalarValue : -2.0 * scalarValue + 2.0;\n';
+        t2 += '        float blue = scalarValue < 0.5 ? 0.0 : 2.0 * scalarValue - 1.0;\n';
         t2 += '        fragmentColor = vec3( red, green, blue );\n';
     }
     else if ( type === 'rainbow-5step' ){
-        t2 += '        float redInf = scalarValue < 0.25 ? 1.0 : -4.0 * scalarValue + 2.0;\n'
-        t2 += '        float redSup = 0.0;\n'
-        t2 += '        float red = scalarValue < 0.5 ? redInf : redSup;\n'
-        t2 += '        float greenInf = scalarValue < 0.25 ? 4.0 * scalarValue : 1.0;\n'
-        t2 += '        float greenSup = scalarValue < 0.75 ? 1.0 : -4.0 * scalarValue + 4.0;\n'
-        t2 += '        float green = scalarValue < 0.5 ? greenInf : greenSup;\n'
-        t2 += '        float blueInf = 0.0;\n'
-        t2 += '        float blueSup = scalarValue < 0.75 ? 4.0 * scalarValue - 2.0 : 1.0;\n'
-        t2 += '        float blue = scalarValue < 0.5 ? blueInf : blueSup;\n'
+        t2 += '        float redInf = scalarValue < 0.25 ? 1.0 : -4.0 * scalarValue + 2.0;\n';
+        t2 += '        float redSup = 0.0;\n';
+        t2 += '        float red = scalarValue < 0.5 ? redInf : redSup;\n';
+        t2 += '        float greenInf = scalarValue < 0.25 ? 4.0 * scalarValue : 1.0;\n';
+        t2 += '        float greenSup = scalarValue < 0.75 ? 1.0 : -4.0 * scalarValue + 4.0;\n';
+        t2 += '        float green = scalarValue < 0.5 ? greenInf : greenSup;\n';
+        t2 += '        float blueInf = 0.0;\n';
+        t2 += '        float blueSup = scalarValue < 0.75 ? 4.0 * scalarValue - 2.0 : 1.0;\n';
+        t2 += '        float blue = scalarValue < 0.5 ? blueInf : blueSup;\n';
         t2 += '        fragmentColor = vec3( red, green, blue );\n';
     }
     else {
@@ -681,4 +681,4 @@ dbv.mesh.getVertexShader = function (type) {
     t3 += '  gl_Position = perspective * fVertexPosition;\n';
     t3 += '}\n';
     return t0 + t1 + t2 + t3;
-}
+};

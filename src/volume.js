@@ -31,8 +31,8 @@ dbv.volume.render = function (renderer, files, callback, gui, showtimeListeners,
     // check extension
     var extension = testFileName.split('.').pop();
     if ( extension !== 'dcm' && extension !== 'nii') {
-        var message = 'Unsupported file format: ' + extension;
-        throw new Error(message);
+        var message1= 'Unsupported file format: ' + extension;
+        throw new Error(message1);
     }
 
     // create a volume from the input file
@@ -53,10 +53,11 @@ dbv.volume.render = function (renderer, files, callback, gui, showtimeListeners,
 
     var vols = [];
     var fileNames = [];
+    var nread = null;
 
     if ( isFile ) {
         // read file count
-        var nread = 0;
+        nread = 0;
         // id specific load handler
         var getFileLoadHandler = function (id) {
             return function (event) {
@@ -66,7 +67,7 @@ dbv.volume.render = function (renderer, files, callback, gui, showtimeListeners,
                 ++nread;
                 // when full, add array to X.volume and render it
                 if ( nread === files.length ) {
-                    volume.file = fileNames
+                    volume.file = fileNames;
                     volume.filedata = vols;
                     renderer.add(volume);
                     renderer.render();
@@ -81,20 +82,22 @@ dbv.volume.render = function (renderer, files, callback, gui, showtimeListeners,
                 }
             };
         };
+        // error handler
+        var readErrorHandler = function (event) {
+            dbv.gui.onError(event.message);
+            callback(false);
+        };
         // read all files
         for ( var i = 0; i < files.length; ++i ) {
             var reader = new FileReader();
             reader.onload = getFileLoadHandler(i);
-            reader.onerror = function (event) {
-                dbv.gui.onError(event.message);
-                callback(false);
-            }
+            reader.onerror = readErrorHandler;
             reader.readAsArrayBuffer(files[i]);
         }
     }
     else {
         // read file count
-        var nread = 0;
+        nread = 0;
         // id specific load handler
         var getUrlLoadHandler = function (id) {
             return function (/*event*/) {
@@ -104,7 +107,7 @@ dbv.volume.render = function (renderer, files, callback, gui, showtimeListeners,
                 ++nread;
                 // when full, add array to X.volume and render it
                 if ( nread === files.length ) {
-                    volume.file = fileNames
+                    volume.file = fileNames;
                     volume.filedata = vols;
                     renderer.add(volume);
                     renderer.render();
@@ -119,17 +122,19 @@ dbv.volume.render = function (renderer, files, callback, gui, showtimeListeners,
                 }
             };
         };
+        // error handler
+        var reqErrorHandler = function (/*event*/) {
+            dbv.gui.onError('Error in XMLHttpRequest, status: '+this.status);
+            callback(false);
+        };
         // read all files
-        for ( var i = 0; i < files.length; ++i ) {
+        for ( var f = 0; f < files.length; ++f ) {
             var request = new XMLHttpRequest();
-            request.open('GET', files[i], true);
+            request.open('GET', files[f], true);
             request.responseType = 'arraybuffer';
-            request.onload = getUrlLoadHandler(i);
-            request.onerror = function (/*event*/) {
-                dbv.gui.onError('Error in XMLHttpRequest, status: '+this.status);
-                callback(false);
-            }
+            request.onload = getUrlLoadHandler(f);
+            request.onerror = reqErrorHandler;
             request.send(null);
         }
     }
-}
+};

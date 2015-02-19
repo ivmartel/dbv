@@ -11,7 +11,7 @@ dbv.gui.cleanNode = function (node) {
             node.removeChild(node.firstChild);
         }
     }
-}
+};
 
 /**
 * Remove an HTML node.
@@ -25,7 +25,7 @@ dbv.gui.removeNode = function (id) {
         var top = node.parentNode;
         top.removeChild(node);
     }
-}
+};
 
 /**
 * Display an input array in a textarea.
@@ -78,7 +78,7 @@ dbv.gui.displayMessage = function (message) {
         body.insertBefore(div, body.firstChild);
     }
     div.appendChild(par);
-}
+};
 
 /**
 * Display an error message.
@@ -86,7 +86,7 @@ dbv.gui.displayMessage = function (message) {
 */
 dbv.gui.onError = function (message) {
     dbv.gui.displayMessage({'type': 'error', 'text': message});
-}
+};
 
 /**
 * Run a callback method when private counter is zero.
@@ -121,7 +121,7 @@ dbv.gui.getRenderer3D = function (displayDivName, position) {
     renderer.camera.position = position;
     // return
     return renderer;
-}
+};
 
 /**
 * Animator for dat.GUI that rotates the mesh around Z.
@@ -155,7 +155,7 @@ dbv.gui.onDragOver = function (event) {
     event.preventDefault();
     // change style
     this.className = 'hover';
-}
+};
 
 /**
 * Handle dragleave events.
@@ -167,7 +167,7 @@ dbv.gui.onDragLeave = function (event) {
     event.preventDefault();
     // change style
     this.className = '';
-}
+};
 
 /**
 * Handle drop events.
@@ -182,7 +182,7 @@ dbv.gui.onDrop = function (event) {
     this.className = '';
     // callback
     renderFiles(event.dataTransfer.files);
-}
+};
 
 /**
 * Handle file change.
@@ -191,8 +191,8 @@ dbv.gui.onDrop = function (event) {
 */
 dbv.gui.onFileChange = function (source) {
     // render
-    renderFiles(source.files)
-}
+    renderFiles(source.files);
+};
 
 /**
 * Add a mesh panel to a root GUI.
@@ -215,7 +215,7 @@ dbv.gui.addMeshPanel = function (root, mesh, points, scalarList) {
     // open the folder
     meshgui.open();
 
-    if ( scalarList.length != 0 ) {
+    if ( scalarList.length !== 0 ) {
         // scalars gui
         var scalarsgui = root.addFolder('Scalars');
         // the min and max color which define the linear gradient mapping
@@ -239,7 +239,7 @@ dbv.gui.addMeshPanel = function (root, mesh, points, scalarList) {
         // open the folder
         scalarsgui.open();
     }
-}
+};
 
 /**
 * Add a volume panel to a root GUI.
@@ -269,7 +269,7 @@ dbv.gui.addVolumePanel = function (root, volume) {
 
     // open the folder
     volumegui.open();
-}
+};
 
 /**
  * Append a cell to a given row.
@@ -355,21 +355,21 @@ dbv.gui.hideFileChoose = function (flag) {
     if ( div ) {
         div.style.display = flag ? 'none' : '';
     }
-}
+};
 
 /**
 * Simple listener storage.
 */
 dbv.gui.Listeners = function () {
     this.list = [];
-}
+};
 //! Add a listener to the list.
 dbv.gui.Listeners.prototype.add = function (listener) {
     this.list.push(listener);
-}
+};
 //! Run all listeners.
 dbv.gui.Listeners.prototype.run = function () {
     for ( var i=0; i < this.list.length; ++i ) {
         this.list[i]();
     }
-}
+};
