@@ -146,8 +146,11 @@ function getVolumeLinkStr(root, files, viewType) {
 function getVolumesFileArray(root, files) {
     var fileArray = [];
     var keys = Object.keys(files);
+    if ( !dbv.browser.isLink(root) ) {
+        root += '/';
+    }
     for ( var i = 0; i < keys.length; ++i ) {
-        fileArray.push( root + '/' + files[keys[i]] );
+        fileArray.push( root + files[keys[i]] );
     }
     return fileArray;
 }
