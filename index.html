@@ -104,8 +104,12 @@ function getVolumeInfoElement(volume, viewType) {
     for ( var i = 0; i < keys.length; ++i ) {
         var volumeInfo = volume[keys[i]];
         var volumeLink = getVolumeLinkStr(volumeInfo.root, volumeInfo.files, viewType);
+        var replaceMode = 'void';
+        if ( dbv.browser.isLink(volumeInfo.root) ) {
+            replaceMode = 'key';
+        }
         var link = document.createElement('a');
-        link.href = linkRoot + '?input=' + volumeLink + '&dwvReplaceMode=void';
+        link.href = linkRoot + '?input=' + volumeLink + '&dwvReplaceMode=' + replaceMode;
         link.appendChild( document.createTextNode( keys[i]) );
         link.target = '_parent';
         if ( i !== 0 ) element.appendChild( document.createTextNode(', '));
@@ -121,7 +125,11 @@ function getVolumeInfoElement(volume, viewType) {
 */
 function getVolumeLinkStr(root, files, viewType) {
     var redir = '';
+    var sep = '';
+    var prefix = '';
     if ( !dbv.browser.isLink(root) ) {
+        sep = '/?';
+        prefix = 'file=';
         if ( viewType === 'volume' ) {
             redir = '../';
         }
@@ -129,11 +137,14 @@ function getVolumeLinkStr(root, files, viewType) {
             redir = '../../';
         }
     }
-    var str = redir + root + '/?';
+    else {
+        sep = '&';
+    }
+    var str = redir + root + sep;
     var keys = Object.keys(files);
     for ( var i = 0; i < keys.length; ++i ) {
         if ( i !== 0 ) str += '&';
-        str += 'file=' + files[keys[i]];
+        str += prefix + files[keys[i]];
     }
     return encodeURIComponent(str);
 }
@@ -146,11 +157,15 @@ function getVolumeLinkStr(root, files, viewType) {
 function getVolumesFileArray(root, files) {
     var fileArray = [];
     var keys = Object.keys(files);
+    var sep = '';
     if ( !dbv.browser.isLink(root) ) {
-        root += '/';
+        sep = '/';
+    }
+    else {
+        sep = '&';
     }
     for ( var i = 0; i < keys.length; ++i ) {
-        fileArray.push( root + files[keys[i]] );
+        fileArray.push( root + sep + files[keys[i]] );
     }
     return fileArray;
 }

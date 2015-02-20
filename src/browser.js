@@ -73,14 +73,61 @@ dbv.browser.decodeUri = function (uri, multiple) {
             // multiple files
             else {
                 var root = decoded.substr(0, qmarkIndex2 );
-                var filesStr = decoded.substr(qmarkIndex2+1);
-                var files = filesStr.split('&');
-                var paths = [];
-                for ( var i = 0; i < files.length; ++i ) {
-                    var split = files[i].split('=');
-                    if ( split[0] === 'file' ) {
-                        paths.push( root + split[1] );
+                var tail = decoded.substr(qmarkIndex2+1);
+                var args = tail.split('&');
+                // find repeat key
+                var repeatKey = null;
+                var tailKeys = [];
+                var tailKey = null;
+                var replaceMode = "void";
+                for ( var i = 0; i < args.length; ++i ) {
+                    tailKey = args[i].split('=')[0];
+                    if ( tailKeys.indexOf(tailKey) != -1 ) {
+                        repeatKey = tailKey;
                     }
+                    tailKeys.push( tailKey );
+                    if ( tailKey === 'dwvReplaceMode' ) {
+                        replaceMode = args[i].split('=')[1];
+                    }
+                }
+                // sort repeated from non repeated
+                var repeats = [];
+                var tailArgs = '';
+                var suffix = '';
+                for ( var j = 0; j < args.length; ++j ) {
+                    tailKey = args[j].split('=')[0];
+                    if ( tailKey === repeatKey ) {
+                        if ( replaceMode === "void" ) {
+                            repeats.push( args[j].split('=')[1] );
+                        }
+                        else {
+                            repeats.push( args[j] );
+                        }
+                    }
+                    else {
+                        // tail arguments
+                        if ( tailKey === "dwvReplaceMode" ) {
+                            // do nothing
+                        }
+                        else if ( tailKey === ".dcm" ) {
+                            suffix = '&.dcm'; // not so nice...
+                        }
+                        else {
+                            tailArgs += args[j] + '&';
+                        }
+                    }
+                }
+                // create paths
+                var paths = [];
+                sep = '';
+                if ( dbv.browser.isLink(root) ) {
+                    sep = '?';
+                }
+                else {
+                    sep = '/';
+                }
+                for ( var k = 0; k < repeats.length; ++k ) {
+                    paths.push( root + sep + tailArgs + repeats[k] + suffix);
                 }
                 res = paths;
             }
