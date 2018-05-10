@@ -1,7 +1,7 @@
 dbv
 ===
 
-Volume/mesh database visualisation. Using a locally modified version of XTK, see https://github.com/ivmartel/X. Modify the 'data.json' file to link to your data. 
+Volume/mesh database visualisation. Using a locally modified version of XTK (see https://github.com/ivmartel/X and [XTK pull request #153](https://github.com/xtk/X/pull/153)). Modify the 'data.json' file to link to your data. 
 
 For development purposes, browsers do have a switch to allow accessing local file(s):
  * Google Chrome: launch with the `--disable-web-security` argument (see the [list](http://peter.sh/experiments/chromium-command-line-switches/#disable-web-security)),
